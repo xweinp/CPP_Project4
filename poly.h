@@ -16,7 +16,7 @@ public:
     // Konstruktor kopiujący bądź przenoszący (jednoargumentowe), których argument jest odpowiednio typu const poly<U, M>& bądź poly<U, M>&&, gdzie M <= N, a typ U jest konwertowalny do typu T.
     poly(const poly<U, M>&); // TODO: implement 
     poly(const poly<U, M>&&); // TODO: implement 
-    !
+
     // Konstruktor konwertujący (jednoargumentowy) o argumencie typu konwertowalnego do typu T tworzy wielomian rozmiaru 1.
     // TODO: declare and implement 
 
