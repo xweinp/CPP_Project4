@@ -3,6 +3,8 @@
 
 #include <cstddef>
 #include <type_traits>
+#include <concepts>
+#include <vector>
 
 template <typename T, std::size_t N = 0> 
 class poly
@@ -28,7 +30,7 @@ public:
         
     } */
     
-    template <typename U, typename M>
+    template <typename U, std::size_t M>
     constexpr poly(poly<U, M>&& other) requires std::convertible_to<U, T> {
         init(std::forward<poly<U, M>>(other));
     } 
@@ -40,12 +42,11 @@ public:
     // Konstruktor wieloargumentowy (dwa lub więcej argumentów) tworzy wielomian o współczynnikach takich jak wartości kolejnych argumentów. 
     // Liczba argumentów powinna być nie większa niż rozmiar wielomianu N, a typ każdego argumentu powinien być r-referencją do typu konwertowalnego do typu T. 
     // Wymagamy użycia „perfect forwarding”, patrz std::forward.
-    // TODO: declare and implement 
 
     template <typename... U>
     constexpr poly(U&&... args) requires (sizeof...(args) <= N) && (std::convertible_to<U, T> && ...) 
         : a{std::forward<U>(args)...} {
-    } // FIXME: jeszcze nieprzemyślałem tego
+    }
 
     // ^^^^^^^^^^^^
     // Należy zapoznać się z szablonem std::is_convertible i konceptem std::convertible_to
@@ -71,20 +72,20 @@ public:
     // TODO: declare and implement
 
 private:
-    vector<T> a;
+    std::vector<T> a;
 
     constexpr poly(std::initializer_list<T> init_list) : a(init_list) {}
 
-    template<typename U, typename M>
-    constexpr init(const poly<U, M>& other) {
+    template<typename U, std::size_t M>
+    constexpr void init(const poly<U, M>& other) {
         a = std::vector<T>(other.a.size());
         for (std::size_t i = 0; i < other.a.size(); ++i) {
             a[i] = static_cast<T>(other.a[i]);
         }
     }
 
-    template<typename U, typename M>
-    constexpr init(poly<U, M>&& other) {
+    template<typename U, std::size_t M>
+    constexpr void init(poly<U, M>&& other) {
         a = std::vector<T>(other.a.size());
         for (std::size_t i = 0; i < other.a.size(); ++i) {
             a[i] = static_cast<T>(std::move(other.a[i]));
