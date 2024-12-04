@@ -61,7 +61,7 @@ public:
     // OPERATORY PRZYPISANIA
     // TODO: declare and implement
     template <typename U, std::size_t M>
-    constexpr auto operator=(const poly<U, M>& other) const -> poly<U, N>& requires (N >= M) && (std::convertible_to<U, T>) {
+    constexpr auto operator=(const poly<U, M>& other) const -> poly<T, N>& requires goodArgument<U, M> {
         if (this != &other) {
             assign_elements(other);
         }
@@ -69,7 +69,7 @@ public:
     }
     
     template <typename U, std::size_t M>
-    constexpr auto operator=(poly<U, M>&& other) -> poly<U, N>& requires (N >= M) && (std::convertible_to<U, T>) {
+    constexpr auto operator=(poly<U, M>&& other) -> poly<T, N>& requires goodArgument<U, M> {
         if (this != &other) {
            assign_elements(std::move(other));
         }
@@ -77,7 +77,82 @@ public:
     }
 
     // OPERATORY ARYTMETYCZNE
-    // TODO: declare and implement
+    template<typename U, std::size_t M>
+    poly& operator+=(const poly<U, M>& other) requires goodArgument<U, M> {
+        for (size_t i = 0; i < M; ++i) {
+            a[i] += other.a[i];
+        }
+        return *this;
+    }
+
+    template<typename U, std::size_t M>
+    poly& operator-=(const poly<U, M>& other) requires goodArgument<U, M> {
+        for (size_t i = 0; i < M; ++i) {
+            a[i] -= other.a[i];
+        }
+        return *this;
+    }
+
+    template<typename U>
+    poly& operator+=(const U& u) requires std::is_convertible<U, T> {
+        a[0] += u;
+        return *this;
+    }
+
+    template<typename U>
+    poly& operator-=(const U& u) requires std::is_convertible<U, T> {
+        a[0] -= u;
+        return *this;
+    }
+
+    template<typename U>
+    poly& operator*=(const U& u) requires std::is_convertible<U, T> {
+        for (auto& x: a)
+            x *= u;
+        return *this;
+    }
+
+
+    constexpr poly& operator-(const poly& other) {
+
+    }   
+
+    constexpr poly& operator+(const poly& other) {
+
+    }   
+
+    constexpr poly& operator*(const poly& other) {
+
+    } 
+
+
+    template<typename U>
+    constexpr poly& operator-(const U& other) {
+
+    }   
+    template<typename U>
+    constexpr poly& operator+(const U& other) {
+
+    }   
+    template<typename U>
+    constexpr poly& operator*(const U& other) {
+
+    } 
+
+
+    template<typename U>
+    constexpr U& operator-(const poly& other) {
+
+    }   
+    template<typename U>
+    constexpr U& operator+(const poly& other) {
+
+    }   
+    template<typename U>
+    constexpr U& operator*(const poly& other) {
+
+    } 
+    
 
     // OPERATOR INDEKSUJĄCY
     constexpr T& operator[](std::size_t i) {
@@ -100,6 +175,8 @@ private:
     std::array<T, N> a;
 
     template<typename U, std::size_t M>
+    concept goodArgument = (std::convertible_to<U, T>) && (N >= M);
+
     constexpr void assign_elements(const poly<U, M>& other) {
         std::size_t i = 0;
         while (i < M) {
