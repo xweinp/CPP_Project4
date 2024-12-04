@@ -43,7 +43,7 @@ public:
     // Wymagamy użycia „perfect forwarding”, patrz std::forward.
 
     template <typename... U>
-    constexpr poly(U&&... args) requires (sizeof...(args) >= 2) && (sizeof...(args) <= N) && (std::convertible_to<U, T> && ...) {
+    constexpr poly(U&&... args) requires (sizeof...(args) >= 2) && (sizeof...(args) <= N) && (std::convertible_to<U, T> && ...) : a{} {
         poly({static_cast<T>(std::forward<U>(args))...});
     }
 
@@ -57,6 +57,29 @@ public:
 
     // OPERATORY PRZYPISANIA
     // TODO: declare and implement
+    template <typename U, std::size_t M>
+    constexpr auto operator=(const poly<U, M>& other) -> poly<U, N>& requires (N >= M) && (std::convertible_to<U, T>) {
+        if (this != &other) {
+            std::size_t i = 0;
+            while (i < M) {
+                a[i] = other.a[i];
+                i++;
+            }
+        }
+        return *this;
+    }
+    
+    template <typename U, std::size_t M>
+    constexpr auto operator=(poly<U, M>&& other) -> poly<U, N>& requires (N >= M) && (std::convertible_to<U, T>) {
+        if (this != &other) {
+            std::size_t i = 0;
+            while (i < M) {
+                a[i] = std::move(other.a[i]);
+                i++;
+            }
+        }
+        return *this;
+    }
 
     // OPERATORY ARYTMETYCZNE
     // TODO: declare and implement
@@ -66,7 +89,6 @@ public:
         return a[i];
     }
 
-    // Const operator[] - tylko do odczytu, nie pozwala na modyfikację
     constexpr const T& operator[](std::size_t i) const {
         return a[i];
     }
@@ -78,9 +100,14 @@ public:
     // TODO: declare and implement
 
 private:
-    std::vector<T> a;
+    std::array<T, N> a;
 
-    constexpr poly(std::initializer_list<T> init_list) : a(init_list) {}
+    constexpr poly(std::initializer_list<T> init_list) {
+        std::size_t i = 0;
+        for (const auto& t : init_list) {
+            a[i++] = t;
+        }
+    }
 
     template<typename U, std::size_t M>
     constexpr void init(const poly<U, M>& other) requires (M == N) {
