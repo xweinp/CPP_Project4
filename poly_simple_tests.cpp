@@ -16,6 +16,7 @@ namespace {
 
     void simple_test() {
         constexpr auto zero = poly<int>();
+        constexpr auto zero2 = poly<int, 2>();
 
         constexpr auto p = poly(2, 1);
         static_assert(std::is_same_v<decltype(p), const poly<int, 2>>);
@@ -25,7 +26,7 @@ namespace {
         constexpr auto q = poly(poly(1.0, 2.0), 3.0, 4.0);
         static_assert(std::is_same_v<decltype(q), const poly<poly<double, 2>, 3>>);
 
-        //constexpr auto constant_poly = const_poly(p);
+        constexpr auto constant_poly = const_poly(p);
     }
 
 }

@@ -15,7 +15,7 @@ public:
 
 
     // Konstruktor bezargumentowy tworzy wielomian tożsamościowo równy zeru
-    constexpr poly() : a(N) {}
+    constexpr poly() : a() {}
 
     // Konstruktor kopiujący bądź przenoszący (jednoargumentowe), których argument jest odpowiednio typu const poly<U, M>& bądź poly<U, M>&&, gdzie M <= N, a typ U jest konwertowalny do typu T.
     
@@ -29,7 +29,7 @@ public:
     } */
 
     template <typename U, std::size_t M>
-    constexpr poly(poly<U, M>&& other) requires (N >= M) && (std::convertible_to<U, T>) : a(N) {
+    constexpr poly(poly<U, M>&& other) requires (N >= M) && (std::convertible_to<U, T>) {
         init(std::forward<poly<U, M>>(other));
     } 
 
@@ -85,14 +85,14 @@ private:
     template<typename U, std::size_t M>
     constexpr void init(const poly<U, M>& other) requires (M == N) {
         for (std::size_t i = 0; i < N; ++i) {
-            a[i] = static_cast<T>(other.a[i]);
+            a.push_back(static_cast<T>(other.a[i]));
         }
     }
 
     template<typename U, std::size_t M>
     constexpr void init(poly<U, M>&& other) requires (M == N) {
         for (std::size_t i = 0; i < N; ++i) {
-            a[i] = static_cast<T>(std::move(other.a[i]));
+            a.push_back(static_cast<T>(std::move(other.a[i])));
         }
     }
 };
