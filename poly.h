@@ -15,7 +15,7 @@ public:
 
 
     // Konstruktor bezargumentowy tworzy wielomian tożsamościowo równy zeru
-    constexpr poly() : a() {}
+    constexpr poly() : a(N) {}
 
     // Konstruktor kopiujący bądź przenoszący (jednoargumentowe), których argument jest odpowiednio typu const poly<U, M>& bądź poly<U, M>&&, gdzie M <= N, a typ U jest konwertowalny do typu T.
     
@@ -27,22 +27,23 @@ public:
     constexpr poly(const poly<U, M>&) requires std::convertible_to<U, T> {
         
     } */
-    
+
     template <typename U, std::size_t M>
-    constexpr poly(poly<U, M>&& other) requires (M <= N && std::convertible_to<U, T>) : a(N) {
+    constexpr poly(poly<U, M>&& other) requires (N >= M) && (std::convertible_to<U, T>) : a(N) {
         init(std::forward<poly<U, M>>(other));
     } 
 
     // Konstruktor konwertujący (jednoargumentowy) o argumencie typu konwertowalnego do typu T tworzy wielomian rozmiaru 1.
     template <typename U>
-    constexpr poly(U other) requires std::convertible_to<U, T> : a{static_cast<T>(other)} {}
+    constexpr poly(U other) requires std::convertible_to<U, T> : a{static_cast<T>(other)} {
+    }
 
     // Konstruktor wieloargumentowy (dwa lub więcej argumentów) tworzy wielomian o współczynnikach takich jak wartości kolejnych argumentów. 
     // Liczba argumentów powinna być nie większa niż rozmiar wielomianu N, a typ każdego argumentu powinien być r-referencją do typu konwertowalnego do typu T. 
     // Wymagamy użycia „perfect forwarding”, patrz std::forward.
 
     template <typename... U>
-    constexpr poly(U&&... args) requires (sizeof...(args) == N) && (std::convertible_to<U, T> && ...) {
+    constexpr poly(U&&... args) requires (sizeof...(args) >= 2) && (sizeof...(args) <= N) && (std::convertible_to<U, T> && ...) {
         poly({static_cast<T>(std::forward<U>(args))...});
     }
 
@@ -89,7 +90,7 @@ private:
     }
 };
 
-// deduktor do constructora
+// deduktor do konstruktora
 template <typename... U>
 poly(U&&...) -> poly<std::common_type_t<U...>, sizeof...(U)>;
 
@@ -109,10 +110,15 @@ struct std::common_type<U, poly<T, N>> {
     using type = poly<std::common_type_t<T, U>, N>;
 };
 
-
+// funkcja const_poly
+template <typename T, std::size_t N>
+constexpr poly<poly<T, N>, 1> const_poly(poly<T, N> p) {
+    constexpr poly<poly<T, N>, 1> result{};
+    //result[0] = p;
+    return result;
+}
 
 // FUNKCJA CROSS
 // TODO: declare and implement
-
 
 #endif // POLY_H

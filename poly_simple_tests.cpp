@@ -24,6 +24,8 @@ namespace {
         
         constexpr auto q = poly(poly(1.0, 2.0), 3.0, 4.0);
         static_assert(std::is_same_v<decltype(q), const poly<poly<double, 2>, 3>>);
+
+        //constexpr auto constant_poly = const_poly(p);
     }
 
 }
