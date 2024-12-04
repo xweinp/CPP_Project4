@@ -56,6 +56,17 @@ namespace {
 
         constexpr auto constant_poly = const_poly(p);
         p1 = constant_poly[0];
+
+        // testy const_poly
+        constexpr auto p3 = poly(1, 2, 3);
+        static_assert(const_poly(p3)[0] == p3);
+        
+        // testy metody size
+        static_assert(const_poly(p3).size() == 1);
+
+        // testy konwersji typów
+        static_assert(std::is_convertible_v<poly<int, 3>, poly<long long, 4>>);
+        //static_assert(std::is_convertible_v<poly <int, 4>, poly<long long, 3>>);
     }
 
 }
