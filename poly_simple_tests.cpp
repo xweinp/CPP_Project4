@@ -72,6 +72,15 @@ namespace {
 
     }
 
+/*
+    void cross_test() {
+        constexpr auto p = poly(2, 1);
+        constexpr auto q = poly(poly(1.0, 2.0), 3.0, 4.0);
+        constexpr auto r = poly(poly(poly(2.0, 4.0), 6.0, 8.0), q);
+
+        //static_assert(cross(p, q) == r);
+    }
+*/
 }
 
 int main() {
