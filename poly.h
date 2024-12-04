@@ -97,7 +97,9 @@ public:
     // TODO: declare and implement
 
     // METODA SIZE
-    // TODO: declare and implement
+    constexpr std::size_t size() {
+        return a.size();
+    }
 
 private:
     std::array<T, N> a;
