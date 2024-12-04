@@ -15,7 +15,7 @@ public:
 
 
     // Konstruktor bezargumentowy tworzy wielomian tożsamościowo równy zeru
-    constexpr poly() : a() {}
+    constexpr poly() : a(N, 0) {}
 
     // Konstruktor kopiujący bądź przenoszący (jednoargumentowe), których argument jest odpowiednio typu const poly<U, M>& bądź poly<U, M>&&, gdzie M <= N, a typ U jest konwertowalny do typu T.
     
@@ -56,7 +56,29 @@ public:
     // TODO: declare and implement
 
     // OPERATORY PRZYPISANIA
-    // TODO: declare and implement
+    template <typename U, std::size_t M>
+    requires (N >= M && std::is_convertible_v<U, T>)    
+    poly& operator=(const poly<U, M>& other) {
+        if (this != &other) {
+            for (size_t i = 0 ; i < M; ++ i)
+                a[i] = other.a[i];
+            for (size_t i = M; i < N; ++i)
+                a[i] = 0;
+        }
+        return *this;
+    }
+
+    template <typename U, std::size_t M>
+    requires (N >= M && std::is_convertible_v<U, T>)    
+    poly& operator=(const poly<U, M>&& other) {
+        if (this != &other) {
+            for (size_t i = 0 ; i < M; ++ i)
+                a[i] = std::move(other.a[i]);
+            for (size_t i = M; i < N; ++i)
+                a[i] = T();
+        }
+        return *this;
+    }
 
     // OPERATORY ARYTMETYCZNE
     // TODO: declare and implement
@@ -78,7 +100,7 @@ public:
     // TODO: declare and implement
 
 private:
-    std::vector<T> a;
+    constexpr std::vector<T> a;
 
     constexpr poly(std::initializer_list<T> init_list) : a(init_list) {}
 
