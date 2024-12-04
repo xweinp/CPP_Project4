@@ -44,7 +44,10 @@ public:
 
     template <typename... U>
     constexpr poly(U&&... args) requires (sizeof...(args) >= 2) && (sizeof...(args) <= N) && (std::convertible_to<U, T> && ...) : a{} {
-        poly({static_cast<T>(std::forward<U>(args))...});
+        T arr[] = {static_cast<T>(std::forward<U>(args))...};
+        for (std::size_t i = 0; i < N; ++i) {
+            a[i] = arr[i]; // Inicjalizuj tablicę 'a' wartościami
+        }
     }
 
     // ^^^^^^^^^^^^
@@ -103,13 +106,6 @@ public:
 
 private:
     std::array<T, N> a;
-
-    constexpr poly(std::initializer_list<T> init_list) {
-        std::size_t i = 0;
-        for (const auto& t : init_list) {
-            a[i++] = t;
-        }
-    }
 
     template<typename U, std::size_t M>
     constexpr void init(const poly<U, M>& other) requires (M == N) {
