@@ -58,7 +58,7 @@ public:
     // OPERATORY PRZYPISANIA
     // TODO: declare and implement
     template <typename U, std::size_t M>
-    constexpr auto operator=(const poly<U, M>& other) -> poly<U, N>& requires (N >= M) && (std::convertible_to<U, T>) {
+    constexpr auto operator=(const poly<U, M>& other) const -> poly<U, N>& requires (N >= M) && (std::convertible_to<U, T>) {
         if (this != &other) {
             std::size_t i = 0;
             while (i < M) {
@@ -147,7 +147,7 @@ struct std::common_type<U, poly<T, N>> {
 // funkcja const_poly
 template <typename T, std::size_t N>
 constexpr poly<poly<T, N>, 1> const_poly(poly<T, N> p) {
-    constexpr poly<poly<T, N>, 1> result{};
+    poly<poly<T, N>, 1> result{};
     result[0] = p;
     return result;
 }
