@@ -44,7 +44,10 @@ public:
 
     template <typename... U>
     constexpr poly(U&&... args) requires (sizeof...(args) >= 2) && (sizeof...(args) <= N) && (std::convertible_to<U, T> && ...) : a{} {
-        poly({static_cast<T>(std::forward<U>(args))...});
+        T arr[] = {static_cast<T>(std::forward<U>(args))...};
+        for (std::size_t i = 0; i < N; ++i) {
+            a[i] = arr[i]; // Inicjalizuj tablicę 'a' wartościami
+        }
     }
 
     // ^^^^^^^^^^^^
@@ -60,15 +63,7 @@ public:
     template <typename U, std::size_t M>
     constexpr auto operator=(const poly<U, M>& other) const -> poly<T, N>& requires goodArgument<U, M> {
         if (this != &other) {
-            std::size_t i = 0;
-            while (i < M) {
-                a[i] = other.a[i];
-                i++;
-            }
-            while (i < N) {
-                a[i] = T();
-                i++;
-            }
+            assign_elements(other);
         }
         return *this;
     }
@@ -76,15 +71,7 @@ public:
     template <typename U, std::size_t M>
     constexpr auto operator=(poly<U, M>&& other) -> poly<T, N>& requires goodArgument<U, M> {
         if (this != &other) {
-            std::size_t i = 0;
-            while (i < M) {
-                a[i] = std::move(other.a[i]);
-                i++;
-            }
-            while (i < N) { 
-                a[i] = T();
-                i++;
-            }
+           assign_elements(std::move(other));
         }
         return *this;
     }
@@ -190,10 +177,13 @@ private:
     template<typename U, std::size_t M>
     concept goodArgument = (std::convertible_to<U, T>) && (N >= M);
 
-    constexpr poly(std::initializer_list<T> init_list) {
+    constexpr void assign_elements(const poly<U, M>& other) {
         std::size_t i = 0;
-        for (const auto& t : init_list) {
-            a[i++] = t;
+        while (i < M) {
+            a[i] = other.a[i++];
+        }
+        while (i < N) {
+            a[i++] = 0;
         }
     }
 
@@ -231,6 +221,12 @@ template <typename T, std::size_t N, typename U>
 struct std::common_type<U, poly<T, N>> {
     using type = poly<std::common_type_t<T, U>, N>;
 };
+
+template <typename T, std::size_t N, typename U, std::size_t M>
+struct std::common_type<poly<T, N>, poly<U, M>> {
+    using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
+};
+
 
 // funkcja const_poly
 template <typename T, std::size_t N>
