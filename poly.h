@@ -62,7 +62,14 @@ public:
     // TODO: declare and implement
 
     // OPERATOR INDEKSUJĄCY
-    // TODO: declare and implement
+    constexpr T& operator[](std::size_t i) {
+        return a[i];
+    }
+
+    // Const operator[] - tylko do odczytu, nie pozwala na modyfikację
+    constexpr const T& operator[](std::size_t i) const {
+        return a[i];
+    }
 
     // METODA AT
     // TODO: declare and implement
@@ -114,7 +121,7 @@ struct std::common_type<U, poly<T, N>> {
 template <typename T, std::size_t N>
 constexpr poly<poly<T, N>, 1> const_poly(poly<T, N> p) {
     constexpr poly<poly<T, N>, 1> result{};
-    //result[0] = p;
+    result[0] = p;
     return result;
 }
 
