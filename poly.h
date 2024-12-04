@@ -46,7 +46,7 @@ public:
     constexpr poly(U&&... args) requires (sizeof...(args) >= 2) && (sizeof...(args) <= N) && (std::convertible_to<U, T> && ...) : a{} {
         T arr[] = {static_cast<T>(std::forward<U>(args))...};
         for (std::size_t i = 0; i < N; ++i) {
-            a[i] = arr[i]; // Inicjalizuj tablicę 'a' wartościami
+            a[i] = arr[i];
         }
     }
 
@@ -113,14 +113,14 @@ private:
     template<typename U, std::size_t M>
     constexpr void init(const poly<U, M>& other) requires (M == N) {
         for (std::size_t i = 0; i < N; ++i) {
-            a.push_back(static_cast<T>(other.a[i]));
+            a[i] = static_cast<T>(other[i]);
         }
     }
 
     template<typename U, std::size_t M>
     constexpr void init(poly<U, M>&& other) requires (M == N) {
         for (std::size_t i = 0; i < N; ++i) {
-            a.push_back(static_cast<T>(std::move(other.a[i])));
+            a[i] = static_cast<T>(std::move(other[i]));
         }
     }
 };
@@ -160,6 +160,17 @@ constexpr poly<poly<T, N>, 1> const_poly(poly<T, N> p) {
 }
 
 // FUNKCJA CROSS
-// TODO: declare and implement
+template <typename T, std::size_t N, typename U, std::size_t M>
+constexpr auto cross(const poly<T, N>& p, const poly<U, M>& q) -> poly<std::common_type<T, U>, N + M> {
+    poly<std::common_type<T, U>, N + M> result;
+
+    for (std::size_t i = 0; i < N; i++) {
+        for (std::size_t j = 0; j < M; j++) {
+            //result[i + j] += p[i] * q[j];
+        }
+    }
+
+    return result;
+}
 
 #endif // POLY_H
