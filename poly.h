@@ -43,7 +43,7 @@ public:
     // Wymagamy użycia „perfect forwarding”, patrz std::forward.
 
     template <typename... U>
-    constexpr poly(U&&... args) requires (sizeof...(args) >= 2) && (sizeof...(args) <= N) && (std::convertible_to<U, T> && ...) {
+    constexpr poly(U&&... args) requires (sizeof...(args) >= 2) && (sizeof...(args) <= N) && (std::convertible_to<U, T> && ...) : a{} {
         poly({static_cast<T>(std::forward<U>(args))...});
     }
 
@@ -56,26 +56,27 @@ public:
     // TODO: declare and implement
 
     // OPERATORY PRZYPISANIA
+
     template <typename U, std::size_t M>
-    requires (N >= M && std::is_convertible_v<U, T>)    
-    poly& operator=(const poly<U, M>& other) {
+    constexpr auto operator=(const poly<U, M>& other) const -> poly<U, N>& requires (N >= M) && (std::convertible_to<U, T>) {
         if (this != &other) {
-            for (size_t i = 0 ; i < M; ++ i)
+            std::size_t i = 0;
+            while (i < M) {
                 a[i] = other.a[i];
-            for (size_t i = M; i < N; ++i)
-                a[i] = 0;
+                i++;
+            }
         }
         return *this;
     }
-
+    
     template <typename U, std::size_t M>
-    requires (N >= M && std::is_convertible_v<U, T>)    
-    poly& operator=(const poly<U, M>&& other) {
+    constexpr auto operator=(poly<U, M>&& other) -> poly<U, N>& requires (N >= M) && (std::convertible_to<U, T>) {
         if (this != &other) {
-            for (size_t i = 0 ; i < M; ++ i)
+            std::size_t i = 0;
+            while (i < M) {
                 a[i] = std::move(other.a[i]);
-            for (size_t i = M; i < N; ++i)
-                a[i] = T();
+                i++;
+            }
         }
         return *this;
     }
@@ -88,7 +89,6 @@ public:
         return a[i];
     }
 
-    // Const operator[] - tylko do odczytu, nie pozwala na modyfikację
     constexpr const T& operator[](std::size_t i) const {
         return a[i];
     }
@@ -97,12 +97,19 @@ public:
     // TODO: declare and implement
 
     // METODA SIZE
-    // TODO: declare and implement
+    constexpr std::size_t size() {
+        return a.size();
+    }
 
 private:
     std::array<T, N> a;
 
-    constexpr poly(std::initializer_list<T> init_list) : a(init_list) {}
+    constexpr poly(std::initializer_list<T> init_list) {
+        std::size_t i = 0;
+        for (const auto& t : init_list) {
+            a[i++] = t;
+        }
+    }
 
     template<typename U, std::size_t M>
     constexpr void init(const poly<U, M>& other) requires (M == N) {
@@ -142,7 +149,7 @@ struct std::common_type<U, poly<T, N>> {
 // funkcja const_poly
 template <typename T, std::size_t N>
 constexpr poly<poly<T, N>, 1> const_poly(poly<T, N> p) {
-    constexpr poly<poly<T, N>, 1> result{};
+    poly<poly<T, N>, 1> result{};
     result[0] = p;
     return result;
 }
