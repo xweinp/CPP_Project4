@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <type_traits>
 #include <concepts>
-#include <vector>
+#include <array>
 
 template <typename T, std::size_t N = 0> 
 class poly
@@ -15,7 +15,7 @@ public:
 
 
     // Konstruktor bezargumentowy tworzy wielomian tożsamościowo równy zeru
-    constexpr poly() : a(N, 0) {}
+    constexpr poly() : a() {}
 
     // Konstruktor kopiujący bądź przenoszący (jednoargumentowe), których argument jest odpowiednio typu const poly<U, M>& bądź poly<U, M>&&, gdzie M <= N, a typ U jest konwertowalny do typu T.
     
@@ -100,7 +100,7 @@ public:
     // TODO: declare and implement
 
 private:
-    constexpr std::vector<T> a;
+    std::array<T, N> a;
 
     constexpr poly(std::initializer_list<T> init_list) : a(init_list) {}
 
