@@ -63,11 +63,7 @@ public:
     template <typename U, std::size_t M>
     constexpr auto operator=(const poly<U, M>& other) const -> poly<U, N>& requires (N >= M) && (std::convertible_to<U, T>) {
         if (this != &other) {
-            std::size_t i = 0;
-            while (i < M) {
-                a[i] = other.a[i];
-                i++;
-            }
+            assign_elements(other);
         }
         return *this;
     }
@@ -75,11 +71,7 @@ public:
     template <typename U, std::size_t M>
     constexpr auto operator=(poly<U, M>&& other) -> poly<U, N>& requires (N >= M) && (std::convertible_to<U, T>) {
         if (this != &other) {
-            std::size_t i = 0;
-            while (i < M) {
-                a[i] = std::move(other.a[i]);
-                i++;
-            }
+           assign_elements(std::move(other));
         }
         return *this;
     }
@@ -106,6 +98,17 @@ public:
 
 private:
     std::array<T, N> a;
+
+    template<typename U, std::size_t M>
+    constexpr void assign_elements(const poly<U, M>& other) {
+        std::size_t i = 0;
+        while (i < M) {
+            a[i] = other.a[i++];
+        }
+        while (i < N) {
+            a[i++] = 0;
+        }
+    }
 
     template<typename U, std::size_t M>
     constexpr void init(const poly<U, M>& other) requires (M == N) {
