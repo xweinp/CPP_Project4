@@ -66,7 +66,10 @@ namespace {
 
         // testy konwersji typów
         static_assert(std::is_convertible_v<poly<int, 3>, poly<long long, 4>>);
-        //static_assert(std::is_convertible_v<poly <int, 4>, poly<long long, 3>>);
+
+        static_assert(std::is_same_v<std::common_type_t<poly<int, 3>, poly<long long, 4>>, poly<long long, 4>>);
+        static_assert(std::is_convertible_v<poly <int, 3>, poly<long long, 4>>);
+
     }
 
 }

@@ -145,6 +145,12 @@ struct std::common_type<U, poly<T, N>> {
     using type = poly<std::common_type_t<T, U>, N>;
 };
 
+template <typename T, std::size_t N, typename U, std::size_t M>
+struct std::common_type<poly<T, N>, poly<U, M>> {
+    using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
+};
+
+
 // funkcja const_poly
 template <typename T, std::size_t N>
 constexpr poly<poly<T, N>, 1> const_poly(poly<T, N> p) {
