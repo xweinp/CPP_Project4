@@ -53,10 +53,8 @@ public:
 
     // Powyższe konstruktory nie umożliwiają stworzenia wielomianu rozmiaru jeden (czyli stałego), którego jedyny współczynnik jest wielomianem
     // Dlatego należy zaimplementować funkcję const_poly, której argumentem jest wielomian p (obiekt typu poly) i która zwraca wielomian rozmiaru jeden, którego jedyny współczynnik to p.
-    // TODO: declare and implement
 
     // OPERATORY PRZYPISANIA
-    // TODO: declare and implement
     template <typename U, std::size_t M>
     constexpr auto operator=(const poly<U, M>& other) const -> poly<U, N>& requires (N >= M) && (std::convertible_to<U, T>) {
         if (this != &other) {
