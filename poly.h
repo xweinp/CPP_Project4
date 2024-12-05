@@ -56,7 +56,7 @@ public:
     // OPERATORY PRZYPISANIA
     // TODO: declare and implement
     template <typename U, std::size_t M>
-    requires std::is_convertible<poly<U, M>, poly<T, N>>
+    requires std::is_convertible_v<poly<U, M>, poly<T, N>>
     auto operator=(const poly<U, M>& other) const -> poly<T, N>& { // to raczej nie moze byc constexpr
         if (this != &other) {
             assign_elements(other);
@@ -65,7 +65,7 @@ public:
     }
     
     template <typename U, std::size_t M>
-    requires std::is_convertible<poly<U, M>, poly<T, N>>
+    requires std::is_convertible_v<poly<U, M>, poly<T, N>>
     constexpr auto operator=(poly<U, M>&& other) -> poly<T, N>& {
         if (this != &other) {
            assign_elements(std::move(other));
@@ -75,7 +75,7 @@ public:
 
     // OPERATORY ARYTMETYCZNE
     template<typename U, std::size_t M>
-    requires std::is_convertible<poly<U, M>, poly<T, N>>
+    requires std::is_convertible_v<poly<U, M>, poly<T, N>>
     poly& operator+=(const poly<U, M>& other)  {
         for (size_t i = 0; i < M; ++i) {
             a[i] += other[i];
@@ -84,7 +84,7 @@ public:
     }
 
     template<typename U, std::size_t M>
-    requires std::is_convertible<poly<U, M>, poly<T, N>>
+    requires std::is_convertible_v<poly<U, M>, poly<T, N>>
     poly& operator-=(const poly<U, M>& other)  {
         for (size_t i = 0; i < M; ++i) {
             a[i] -= other[i];
@@ -94,34 +94,37 @@ public:
 
 
     template<typename U>
-    poly& operator+=(const U& u) requires std::is_convertible<U, T> {
+    requires std::is_convertible_v<U, T>
+    poly& operator+=(const U& u)  {
         a[0] += u;
         return *this;
     }
 
     template<typename U>
-    poly& operator-=(const U& u) requires std::is_convertible<U, T> {
+    requires std::is_convertible_v<U, T>
+    poly& operator-=(const U& u)  {
         a[0] -= u;
         return *this;
     }
 
     template<typename U>
-    poly& operator*=(const U& u) requires std::is_convertible<U, T> {
+    requires std::is_convertible_v<U, T>
+    poly& operator*=(const U& u)  {
         for (auto& x: a)
             x *= u;
         return *this;
     }
 
     constexpr poly operator-() {
-        poly<T, N> result();
+        poly<T, N> result;
         for (size_t i = 0; i < N; ++i)
-            resul[i] = -a[i];
+            result[i] = -a[i];
         return result;
     }
 
     template<typename U, std::size_t M>
     constexpr auto operator+(const poly<U, M>& other) {
-        std::common_type<poly<T, N>, poly<U, M>>::type result();
+        typename std::common_type<poly<T, N>, poly<U, M>>::type result;
         for (size_t i = 0; i < std::max(N, M); ++i) 
             result[i] = a[i] + other.a[i];
         
@@ -129,7 +132,7 @@ public:
     }   
     template<typename U, std::size_t M>
     constexpr auto operator-(const poly<U, M>& other) {
-        std::common_type<poly<T, N>, poly<U, M>>::type result();
+        typename std::common_type<poly<T, N>, poly<U, M>>::type result;
         for (size_t i = 0; i < std::max(N, M); ++i) 
             result[i] = a[i] - other[i];
         
@@ -140,7 +143,7 @@ public:
         if (N == 0 || M == 0) {
             return poly<T, 0>();
         }
-        poly<std::common_type<T, U>, N + M - 1> result(); // TODO: co jesli N + M - 1 > SIZE_T_MAX?
+        poly<std::common_type<T, U>, N + M - 1> result; // TODO: co jesli N + M - 1 > SIZE_T_MAX?
         for (size_t i = 0; i < N; ++i) 
             for (size_t j = 0; j < M; ++j) 
                 result[i + j] += a[i] * other[j];
@@ -151,19 +154,19 @@ public:
 
     template<typename U>
     constexpr poly operator-(const U& other) {
-        std::common_type<poly<T, N>, U>::type result(this);
+        typename std::common_type<poly<T, N>, U>::type result(this);
         result[0] -= other;
         return result;
     }   
     template<typename U>
     constexpr poly operator+(const U& other) {
-        std::common_type<poly<T, N>, U>::type result(this);
+        typename std::common_type<poly<T, N>, U>::type result(this);
         result[0] += other;
         return result;
     }   
     template<typename U>
     constexpr poly operator*(const U& other) {
-        std::common_type<poly<T, N>, U>::type result(this);
+        typename std::common_type<poly<T, N>, U>::type result(this);
         for (auto& x: result)
             x *= other;
         return result;
@@ -191,7 +194,7 @@ private:
     std::array<T, N> a;
 
     
-
+    template<typename U, std::size_t M>
     constexpr void assign_elements(const poly<U, M>& other) {
         std::size_t i = 0;
         while (i < M) {
@@ -222,7 +225,7 @@ private:
 
 template<typename T_From, std::size_t N_From, typename T_To, std::size_t N_To>
 struct std::is_convertible<poly<T_From, N_From>, poly<T_To, N_To>> {
-    static constexpr bool value = (std::convertible_to<T_From, T_To>) && (N_To >= N_From);
+    static constexpr bool value = (std::is_convertible_v<T_From, T_To>) && (N_To >= N_From);
 };
 
 template<typename U, typename T, std::size_t N>
