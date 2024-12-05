@@ -53,15 +53,11 @@ public:
     // ^^^^^^^^^^^^
     // Należy zapoznać się z szablonem std::is_convertible i konceptem std::convertible_to
 
-
-    // Powyższe konstruktory nie umożliwiają stworzenia wielomianu rozmiaru jeden (czyli stałego), którego jedyny współczynnik jest wielomianem
-    // Dlatego należy zaimplementować funkcję const_poly, której argumentem jest wielomian p (obiekt typu poly) i która zwraca wielomian rozmiaru jeden, którego jedyny współczynnik to p.
-    // TODO: declare and implement
-
     // OPERATORY PRZYPISANIA
     // TODO: declare and implement
     template <typename U, std::size_t M>
-    constexpr auto operator=(const poly<U, M>& other) const -> poly<T, N>& requires goodArgument<U, M> {
+    requires std::is_convertible<poly<U, M>, poly<T, N>>
+    auto operator=(const poly<U, M>& other) const -> poly<T, N>& { // to raczej nie moze byc constexpr
         if (this != &other) {
             assign_elements(other);
         }
@@ -69,7 +65,8 @@ public:
     }
     
     template <typename U, std::size_t M>
-    constexpr auto operator=(poly<U, M>&& other) -> poly<T, N>& requires goodArgument<U, M> {
+    requires std::is_convertible<poly<U, M>, poly<T, N>>
+    constexpr auto operator=(poly<U, M>&& other) -> poly<T, N>& {
         if (this != &other) {
            assign_elements(std::move(other));
         }
@@ -78,20 +75,23 @@ public:
 
     // OPERATORY ARYTMETYCZNE
     template<typename U, std::size_t M>
-    poly& operator+=(const poly<U, M>& other) requires goodArgument<U, M> {
+    requires std::is_convertible<poly<U, M>, poly<T, N>>
+    poly& operator+=(const poly<U, M>& other)  {
         for (size_t i = 0; i < M; ++i) {
-            a[i] += other.a[i];
+            a[i] += other[i];
         }
         return *this;
     }
 
     template<typename U, std::size_t M>
-    poly& operator-=(const poly<U, M>& other) requires goodArgument<U, M> {
+    requires std::is_convertible<poly<U, M>, poly<T, N>>
+    poly& operator-=(const poly<U, M>& other)  {
         for (size_t i = 0; i < M; ++i) {
-            a[i] -= other.a[i];
+            a[i] -= other[i];
         }
         return *this;
     }
+
 
     template<typename U>
     poly& operator+=(const U& u) requires std::is_convertible<U, T> {
@@ -112,45 +112,61 @@ public:
         return *this;
     }
 
+    constexpr poly operator-() {
+        poly<T, N> result();
+        for (size_t i = 0; i < N; ++i)
+            resul[i] = -a[i];
+        return result;
+    }
 
-    constexpr poly& operator-(const poly& other) {
-
+    template<typename U, std::size_t M>
+    constexpr auto operator+(const poly<U, M>& other) {
+        std::common_type<poly<T, N>, poly<U, M>>::type result();
+        for (size_t i = 0; i < std::max(N, M); ++i) 
+            result[i] = a[i] + other.a[i];
+        
+        return result;
     }   
-
-    constexpr poly& operator+(const poly& other) {
-
+    template<typename U, std::size_t M>
+    constexpr auto operator-(const poly<U, M>& other) {
+        std::common_type<poly<T, N>, poly<U, M>>::type result();
+        for (size_t i = 0; i < std::max(N, M); ++i) 
+            result[i] = a[i] - other[i];
+        
+        return result;
     }   
+    template<typename U, std::size_t M>
+    constexpr auto operator*(const poly<U, M>& other) {
+        if (N == 0 || M == 0) {
+            return poly<T, 0>();
+        }
+        poly<std::common_type<T, U>, N + M - 1> result(); // TODO: co jesli N + M - 1 > SIZE_T_MAX?
+        for (size_t i = 0; i < N; ++i) 
+            for (size_t j = 0; j < M; ++j) 
+                result[i + j] += a[i] * other[j];
 
-    constexpr poly& operator*(const poly& other) {
-
-    } 
+        return result;
+    }
 
 
     template<typename U>
-    constexpr poly& operator-(const U& other) {
-
+    constexpr poly operator-(const U& other) {
+        std::common_type<poly<T, N>, U>::type result(this);
+        result[0] -= other;
+        return result;
     }   
     template<typename U>
-    constexpr poly& operator+(const U& other) {
-
+    constexpr poly operator+(const U& other) {
+        std::common_type<poly<T, N>, U>::type result(this);
+        result[0] += other;
+        return result;
     }   
     template<typename U>
-    constexpr poly& operator*(const U& other) {
-
-    } 
-
-
-    template<typename U>
-    constexpr U& operator-(const poly& other) {
-
-    }   
-    template<typename U>
-    constexpr U& operator+(const poly& other) {
-
-    }   
-    template<typename U>
-    constexpr U& operator*(const poly& other) {
-
+    constexpr poly operator*(const U& other) {
+        std::common_type<poly<T, N>, U>::type result(this);
+        for (auto& x: result)
+            x *= other;
+        return result;
     } 
     
 
@@ -174,13 +190,12 @@ public:
 private:
     std::array<T, N> a;
 
-    template<typename U, std::size_t M>
-    concept goodArgument = (std::convertible_to<U, T>) && (N >= M);
+    
 
     constexpr void assign_elements(const poly<U, M>& other) {
         std::size_t i = 0;
         while (i < M) {
-            a[i] = other.a[i++];
+            a[i] = other[i++];
         }
         while (i < N) {
             a[i++] = 0;
@@ -201,6 +216,28 @@ private:
         }
     }
 };
+
+
+// TODO: organize this later
+
+template<typename T_From, std::size_t N_From, typename T_To, std::size_t N_To>
+struct std::is_convertible<poly<T_From, N_From>, poly<T_To, N_To>> {
+    static constexpr bool value = (std::convertible_to<T_From, T_To>) && (N_To >= N_From);
+};
+
+template<typename U, typename T, std::size_t N>
+constexpr auto operator-(const U& x, const poly<T, N>& y) {
+    return y - x;
+}   
+template<typename U, typename T, std::size_t N>
+constexpr auto operator+(const U& x, const poly<T, N>& y) {
+    return y + x;
+}   
+template<typename U, typename T, std::size_t N>
+constexpr auto operator*(const U& x, const poly<T, N>& y) {
+    return y * x;
+}   
+
 
 // deduktor do konstruktora
 template <typename... U>
@@ -226,6 +263,7 @@ template <typename T, std::size_t N, typename U, std::size_t M>
 struct std::common_type<poly<T, N>, poly<U, M>> {
     using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
 };
+
 
 
 // funkcja const_poly
