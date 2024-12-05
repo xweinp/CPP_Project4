@@ -56,7 +56,8 @@ public:
     // OPERATORY PRZYPISANIA
     // TODO: declare and implement
     template <typename U, std::size_t M>
-    constexpr auto operator=(const poly<U, M>& other) const -> poly<T, N>& requires goodArgument<U, M> {
+    requires std::is_convertible<poly<U, M>, poly<T, N>>
+    auto operator=(const poly<U, M>& other) const -> poly<T, N>& { // to raczej nie moze byc constexpr
         if (this != &other) {
             assign_elements(other);
         }
@@ -64,7 +65,8 @@ public:
     }
     
     template <typename U, std::size_t M>
-    constexpr auto operator=(poly<U, M>&& other) -> poly<T, N>& requires goodArgument<U, M> {
+    requires std::is_convertible<poly<U, M>, poly<T, N>>
+    constexpr auto operator=(poly<U, M>&& other) -> poly<T, N>& {
         if (this != &other) {
            assign_elements(std::move(other));
         }
@@ -73,7 +75,8 @@ public:
 
     // OPERATORY ARYTMETYCZNE
     template<typename U, std::size_t M>
-    poly& operator+=(const poly<U, M>& other) requires goodArgument<U, M> {
+    requires std::is_convertible<poly<U, M>, poly<T, N>>
+    poly& operator+=(const poly<U, M>& other)  {
         for (size_t i = 0; i < M; ++i) {
             a[i] += other[i];
         }
@@ -81,7 +84,8 @@ public:
     }
 
     template<typename U, std::size_t M>
-    poly& operator-=(const poly<U, M>& other) requires goodArgument<U, M> {
+    requires std::is_convertible<poly<U, M>, poly<T, N>>
+    poly& operator-=(const poly<U, M>& other)  {
         for (size_t i = 0; i < M; ++i) {
             a[i] -= other[i];
         }
@@ -186,13 +190,12 @@ public:
 private:
     std::array<T, N> a;
 
-    template<typename U, std::size_t M>
-    concept goodArgument = (std::convertible_to<U, T>) && (N >= M);
+    
 
     constexpr void assign_elements(const poly<U, M>& other) {
         std::size_t i = 0;
         while (i < M) {
-            a[i] = other.a[i++];
+            a[i] = other[i++];
         }
         while (i < N) {
             a[i++] = 0;
@@ -212,6 +215,14 @@ private:
             a[i] = static_cast<T>(std::move(other[i]));
         }
     }
+};
+
+
+// TODO: organize this later
+
+template<typename T_From, std::size_t N_From, typename T_To, std::size_t N_To>
+struct std::is_convertible<poly<T_From, N_From>, poly<T_To, N_To>> {
+    static constexpr bool value = (std::convertible_to<T_From, T_To>) && (N_To >= N_From);
 };
 
 template<typename U, typename T, std::size_t N>
