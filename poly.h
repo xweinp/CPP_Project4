@@ -56,7 +56,7 @@ public:
     // OPERATORY PRZYPISANIA
     // TODO: declare and implement
     template <typename U, std::size_t M>
-    requires std::is_convertible_v<poly<U, M>, poly<T, N>>
+    requires std::is_convertible_v<poly<U, M>, poly<T, N>> // TODO: byćmoże trzeba zmienić na convertible_to
     auto operator=(const poly<U, M>& other) const -> poly<T, N>& { // to raczej nie moze byc constexpr
         if (this != &other) {
             assign_elements(other);
@@ -183,7 +183,34 @@ public:
     }
 
     // METODA AT
-    // TODO: declare and implement
+
+
+    constexpr auto at() const() {
+        poly result = this;
+        return result;
+    }
+
+    template<typename U, typename... Args>
+    requires()
+    constexpr auto at(const U& first, Args&&... args) {
+        auto result = a[N - 1];
+        if (is_poly_v<T>) {
+            for(int i = N - 2; i >= 0; --i) {
+                result = result * first + a[i].at(std::forward<Args>(args)...);
+            }
+        } else {
+            for (int i = N - 2; i >= 0; --i) {
+                result = result * first + a[i];
+            }
+        }
+        return result;
+    }
+
+    // II
+    template<typename U, std::size_t K>
+    auto at(const std::array<U, K>& arargs) {
+        return std::apply([&](auto... args) {return at(args...);}, arargs);
+    }
 
     // METODA SIZE
     constexpr std::size_t size() {
@@ -240,6 +267,15 @@ template<typename U, typename T, std::size_t N>
 constexpr auto operator*(const U& x, const poly<T, N>& y) {
     return y * x;
 }   
+
+template <typename T>
+struct is_poly : std::false_type{};
+
+template <typename T, std::size_t N>
+struct is_poly<poly<T, N>> : std::true_type{};
+
+template<typename T>
+constexpr bool is_poly_v = is_poly<T>::value;
 
 
 // deduktor do konstruktora
