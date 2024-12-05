@@ -124,7 +124,7 @@ public:
         return result;
     }   
     template<typename U, std::size_t M>
-    constexpr poly operator-(const poly<U, M>& other) {
+    constexpr auto operator-(const poly<U, M>& other) {
         std::common_type<poly<T, N>, poly<U, M>>::type result();
         for (size_t i = 0; i < std::max(N, M); ++i) 
             result[i] = a[i] - other[i];
@@ -133,7 +133,10 @@ public:
     }   
     template<typename U, std::size_t M>
     constexpr auto operator*(const poly<U, M>& other) {
-        poly<std::common_type<T, U>, M * N> result(); // TODO: co jesli M * N > SIZE_T_MAX?
+        if (N == 0 || M == 0) {
+            return poly<T, 0>();
+        }
+        poly<std::common_type<T, U>, N + M - 1> result(); // TODO: co jesli N + M - 1 > SIZE_T_MAX?
         for (size_t i = 0; i < N; ++i) 
             for (size_t j = 0; j < M; ++j) 
                 result[i + j] += a[i] * other[j];
@@ -144,29 +147,22 @@ public:
 
     template<typename U>
     constexpr poly operator-(const U& other) {
-        
+        std::common_type<poly<T, N>, U>::type result(this);
+        result[0] -= other;
+        return result;
     }   
     template<typename U>
     constexpr poly operator+(const U& other) {
-
+        std::common_type<poly<T, N>, U>::type result(this);
+        result[0] += other;
+        return result;
     }   
     template<typename U>
     constexpr poly operator*(const U& other) {
-
-    } 
-
-
-    template<typename U>
-    constexpr U& operator-(const poly& other) {
-
-    }   
-    template<typename U>
-    constexpr U& operator+(const poly& other) {
-
-    }   
-    template<typename U>
-    constexpr U& operator*(const poly& other) {
-
+        std::common_type<poly<T, N>, U>::type result(this);
+        for (auto& x: result)
+            x *= other;
+        return result;
     } 
     
 
@@ -218,6 +214,20 @@ private:
     }
 };
 
+template<typename U, typename T, std::size_t N>
+constexpr auto operator-(const U& x, const poly<T, N>& y) {
+    return y - x;
+}   
+template<typename U, typename T, std::size_t N>
+constexpr auto operator+(const U& x, const poly<T, N>& y) {
+    return y + x;
+}   
+template<typename U, typename T, std::size_t N>
+constexpr auto operator*(const U& x, const poly<T, N>& y) {
+    return y * x;
+}   
+
+
 // deduktor do konstruktora
 template <typename... U>
 poly(U&&...) -> poly<std::common_type_t<U...>, sizeof...(U)>;
@@ -242,6 +252,7 @@ template <typename T, std::size_t N, typename U, std::size_t M>
 struct std::common_type<poly<T, N>, poly<U, M>> {
     using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
 };
+
 
 
 // funkcja const_poly
