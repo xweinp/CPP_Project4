@@ -55,6 +55,10 @@ class poly
 {
 public:
 
+    // TODO: TO MOZE BYC CURSED ale naprawia kilka bledow kompilacji
+    template<typename U, std::size_t M>
+    friend class poly;
+
     // KONSTRUKTORY
 
 
@@ -208,7 +212,7 @@ public:
     }  
 
     template<typename U, std::size_t M>
-    constexpr auto operator*(const poly<U, M>& other) const {
+    constexpr auto operator*([[maybe_unused]]const poly<U, M>& other) const {
         return poly<T, 0>();
     } 
 
@@ -274,7 +278,8 @@ public:
             auto son_result = a[N - 1].at(std::forward<Args>(args)...);
             eval_type_t<U, decltype(son_result)> result = son_result;
             for(size_t i = N - 1; 0 < i--;) {
-                result = result * first + a[i].at(std::forward<Args>(args)...);
+                result *= first;
+                result += a[i].at(std::forward<Args>(args)...);
             }
             return result;
         
@@ -283,9 +288,14 @@ public:
     template<typename U, typename... Args>
     constexpr auto at(const U& first, [[maybe_unused]] Args&&... args) const 
     requires(!is_poly_v<T>) { // TODO: muszę uzupełnić
-        typename std::common_type_t<T, U> result = a[N - 1];
+        static_assert(std::is_same_v<U, poly<int, 2>>);
+        static_assert(std::is_same_v<T, int>);
+        static_assert(std::is_same_v<std::common_type_t<U, T>, poly<int, 2>>);
+        eval_type_t<U, T> result = a[N - 1];
+        static_assert(std::is_same_v<decltype(result), poly<int, 2>>, "cos nie tak");
         for (size_t i = N - 1; 0 < i--;) {
-            result = result * first + a[i];
+            result *= first; // TODO: fix me! trzeba dodac prywatna metode multiply
+            result += a[i]; 
         }
         return result;
     }

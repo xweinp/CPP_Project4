@@ -2,7 +2,7 @@
 
 echo "Kompilacja programu..."
 
-clang++ -ferror-limit=50 -Wall -Wextra -std=c++20 -O2 poly_test_1.cpp -o poly_test
+clang++ -ferror-limit=5 -Wall -Wextra -std=c++20 -O2 poly_test_1.cpp -o poly_test
 
 if [ $? -ne 0 ]
 then
