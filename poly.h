@@ -372,14 +372,20 @@ constexpr poly<poly<T, N>, 1> const_poly(poly<T, N> p) {
 }
 
 // FUNKCJA CROSS
+
+template <typename T, typename U, std::size_t M>
+constexpr std::common_type<T, poly<U, M>> cross(const T& p, const poly<U, M>& q) requires (!is_poly_v<T>) {
+    std::common_type<T, poly<U, M>> result = p * q; 
+    return result;
+}
+
+
 template <typename T, std::size_t N, typename U, std::size_t M>
-constexpr auto cross(const poly<T, N>& p, const poly<U, M>& q) -> poly<std::common_type<T, U>, N + M - 1> {
-    poly<std::common_type<T, U>, N + M - 1> result;
+constexpr poly<std::common_type<T, poly<U, M>>, N> cross(const poly<T, N>& p, const poly<U, M>& q) {
+    poly<std::common_type<T, poly<U, M>>, N> result;
 
     for (std::size_t i = 0; i < N; i++) {
-        for (std::size_t j = 0; j < M; j++) {
-            result[i + j] += p[i] * q[j];
-        }
+        result[i] = cross(p[i], q);
     }
 
     return result;
