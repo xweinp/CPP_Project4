@@ -288,13 +288,9 @@ public:
     template<typename U, typename... Args>
     constexpr auto at(const U& first, [[maybe_unused]] Args&&... args) const 
     requires(!is_poly_v<T>) { // TODO: muszę uzupełnić
-        static_assert(std::is_same_v<U, poly<int, 2>>);
-        static_assert(std::is_same_v<T, int>);
-        static_assert(std::is_same_v<std::common_type_t<U, T>, poly<int, 2>>);
         eval_type_t<U, T> result = a[N - 1];
-        static_assert(std::is_same_v<decltype(result), poly<int, 2>>, "cos nie tak");
         for (size_t i = N - 1; 0 < i--;) {
-            result *= first; // TODO: fix me! trzeba dodac prywatna metode multiply
+            result *= first; // TODO: fix me! trzeba dodac prywatna metode fake_multiply
             result += a[i]; 
         }
         return result;
