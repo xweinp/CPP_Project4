@@ -16,6 +16,9 @@ namespace
 
   void test_static()
   {
+    static_assert(poly(1, 2) * poly(1, 2) == poly(1, 4, 4));
+
+
     constexpr auto p = poly(2, 1);
     static_assert(std::is_same_v<decltype(p), const poly<int, 2>>);
     static_assert(p[0] == 2);

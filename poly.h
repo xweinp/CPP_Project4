@@ -6,6 +6,50 @@
 #include <concepts>
 #include <vector>
 
+// Ze względu na użycie auto w definicji metody at nie byłem w stanie 
+// zadeklarować jej poza klasą, więc zadeklarowałem ją wewnątrz klasy.
+// no i to zmusilo mnie do wrzucenia tutaj odrobiny smieci xD.
+// TODO: organizacja tego kodu
+
+template <typename T, std::size_t N> 
+class poly;
+
+template <typename U>
+struct is_poly : std::false_type{};
+
+template <typename U, std::size_t M>
+struct is_poly<poly<U, M>> : std::true_type{};
+
+template<typename U>
+inline constexpr bool is_poly_v = is_poly<U>::value;
+
+template<typename X, typename A>
+struct eval_type {
+    using type = std::common_type_t<X, A>;
+};
+
+template<typename T, std::size_t N, typename U>
+struct eval_type<poly<T, N>, U> {
+    using type = poly<std::common_type_t<T, U>, N>;
+};
+
+template<typename T, std::size_t N, typename U>
+struct eval_type<U, poly<T, N>> {
+    using type = poly<std::common_type_t<T, U>, N>;
+};
+
+
+template<typename T, std::size_t N, typename U, std::size_t M>
+struct eval_type<poly<T, N>, poly<U, M>> {
+    using type = poly<std::common_type_t<T, U>, (N - 1) * (M - 1) + 1>;
+};
+
+template<typename X, typename A>
+using eval_type_t = eval_type<X, A>::type;
+
+
+
+
 template <typename T, std::size_t N = 0> 
 class poly
 {
@@ -55,7 +99,7 @@ public:
     // OPERATORY PRZYPISANIA
     // TODO: declare and implement
     template <typename U, std::size_t M>
-    requires std::is_convertible_v<poly<U, M>, poly<T, N>> // TODO: byćmoże trzeba zmienić na convertible_to
+    requires std::convertible_to<poly<U, M>, poly<T, N>>
     auto operator=(const poly<U, M>& other) const -> poly<T, N>& { // to raczej nie moze byc constexpr
         if (this != static_cast<decltype(this)>(&other)) {
             assign_elements(other);
@@ -64,7 +108,7 @@ public:
     }
     
     template <typename U, std::size_t M>
-    requires std::is_convertible_v<poly<U, M>, poly<T, N>>
+    requires std::convertible_to<poly<U, M>, poly<T, N>>
     constexpr auto operator=(poly<U, M>&& other) -> poly<T, N>& {
         if (this != static_cast<decltype(this)>(&other)) {
            assign_elements(std::move(other));
@@ -74,8 +118,8 @@ public:
 
     // OPERATORY ARYTMETYCZNE
     template<typename U, std::size_t M>
-    requires std::is_convertible_v<poly<U, M>, poly<T, N>>
-    poly& operator+=(const poly<U, M>& other)  { // TODO: wsm troche problem kiedy this == other (bo other jest const ref)
+    requires std::convertible_to<poly<U, M>, poly<T, N>>
+    poly<T, N>& operator+=(const poly<U, M>& other)  { // TODO: wsm troche problem kiedy this == other (bo other jest const ref)
         for (size_t i = 0; i < M; ++i) {
             a[i] += other[i];
         }
@@ -83,8 +127,8 @@ public:
     }
 
     template<typename U, std::size_t M>
-    requires std::is_convertible_v<poly<U, M>, poly<T, N>>
-    poly& operator-=(const poly<U, M>& other)  { // TODO: wsm troche problem kiedy this == other (bo other jest const ref)
+    requires std::convertible_to<poly<U, M>, poly<T, N>>
+    poly<T, N>& operator-=(const poly<U, M>& other)  { // TODO: wsm troche problem kiedy this == other (bo other jest const ref)
         for (size_t i = 0; i < M; ++i) {
             a[i] -= other[i];
         }
@@ -93,24 +137,46 @@ public:
 
 
     template<typename U>
-    requires std::is_convertible_v<U, T>
-    poly& operator+=(const U& u)  { 
+    requires std::convertible_to<U, T>
+    poly<T, N>& operator+=(const U& u)  { 
         a[0] += u;
         return *this;
     }
 
     template<typename U>
-    requires std::is_convertible_v<U, T>
-    poly& operator-=(const U& u)  {
+    requires std::convertible_to<U, T>
+    poly<T, N>& operator-=(const U& u)  {
         a[0] -= u;
         return *this;
     }
 
     template<typename U>
-    requires std::is_convertible_v<U, T>
-    poly& operator*=(const U& u)  {
+    requires std::convertible_to<U, T>
+    poly<T, N>& operator*=(const U& u)  {
         for (auto& x: a)
             x *= u;
+        return *this;
+    }
+
+    template<typename U>
+    requires std::convertible_to<U, T>
+    poly<T, N>& operator+=(U&& u)  { 
+        a[0] += std::forward<U>(u);
+        return *this;
+    }
+
+    template<typename U>
+    requires std::convertible_to<U, T>
+    poly<T, N>& operator-=(U&& u)  {
+        a[0] -= std::forward<U>(u);
+        return *this;
+    }
+
+    template<typename U>
+    requires std::convertible_to<U, T>
+    poly<T, N>& operator*=(U&& u)  {
+        for (auto& x: a)
+            x *= std::forward<U>(u);
         return *this;
     }
 
@@ -122,23 +188,68 @@ public:
     }
 
     template<typename U, std::size_t M>
-    constexpr auto operator+(const poly<U, M>& other) const;
+    constexpr auto operator+(const poly<U, M>& other) const 
+    -> typename std::common_type_t<poly<T, N>, poly<U, M>> {
+        typename std::common_type_t<poly<T, N>, poly<U, M>> result;
+        for (size_t i = 0; i < std::max(N, M); ++i) 
+            result[i] = a[i] + other.a[i];
+        
+        return result;
+    }   
 
     template<typename U, std::size_t M>
-    constexpr auto operator-(const poly<U, M>& other) const;
+    constexpr auto operator-(const poly<U, M>& other) const 
+    -> typename std::common_type_t<poly<T, N>, poly<U, M>> {
+        typename std::common_type_t<poly<T, N>, poly<U, M>> result;
+        for (size_t i = 0; i < std::max(N, M); ++i) 
+            result[i] = a[i] - other[i];
+        
+        return result;
+    }  
 
     template<typename U, std::size_t M>
-    constexpr auto operator*(const poly<U, M>& other) const;
+    constexpr auto operator*(const poly<U, M>& other) const {
+        return poly<T, 0>();
+    } 
+
+    template<typename U, std::size_t M>
+    requires (N > 0 && M > 0)
+    constexpr auto operator*(const poly<U, M>& other) const {
+        poly<std::common_type_t<T, U>, N + M - 1> result; // TODO: co jesli N + M - 1 > SIZE_T_MAX?
+
+        for (size_t i = 0; i < N; ++i) 
+            for (size_t j = 0; j < M; ++j) {
+                result[i + j] += a[i] * other[j];
+            }
+
+        return result;
+    }
 
 
     template<typename U>
-    constexpr auto operator-(const U& other) const;
+    constexpr auto operator-(const U& other) const 
+    -> typename std::common_type_t<poly<T, N>, U>{
+        typename std::common_type_t<poly<T, N>, U> result(this);
+        result[0] -= other;
+        return result;
+    }  
 
     template<typename U>
-    constexpr auto operator+(const U& other) const;
+    constexpr auto operator+(const U& other) const
+    -> typename std::common_type_t<poly<T, N>, U> {
+        typename std::common_type_t<poly<T, N>, U> result = *this;
+        result[0] += other;
+        return result;
+    }  
 
     template<typename U>
-    constexpr auto operator*(const U& other) const;
+    constexpr auto operator*(const U& other) const 
+    -> typename std::common_type_t<poly<T, N>, U> {
+        typename std::common_type_t<poly<T, N>, U> result = *this;
+        for (auto& x: result.a)
+            x *= other;
+        return result;
+    } 
     
 
     // OPERATOR INDEKSUJĄCY
@@ -156,9 +267,28 @@ public:
         return result;
     }
 
+
     template<typename U, typename... Args>
-    requires(true) // TODO: muszę uzupełnić
-    constexpr auto at(const U& first, Args&&... args) const;
+    constexpr auto at(const U& first, Args&&... args) const 
+    requires(is_poly_v<T>) { // TODO: uzupelnic pozniej
+            auto son_result = a[N - 1].at(std::forward<Args>(args)...);
+            eval_type_t<U, decltype(son_result)> result = son_result;
+            for(size_t i = N - 1; 0 < i--;) {
+                result = result * first + a[i].at(std::forward<Args>(args)...);
+            }
+            return result;
+        
+    }
+
+    template<typename U, typename... Args>
+    constexpr auto at(const U& first, [[maybe_unused]] Args&&... args) const 
+    requires(!is_poly_v<T>) { // TODO: muszę uzupełnić
+        typename std::common_type_t<T, U> result = a[N - 1];
+        for (size_t i = N - 1; 0 < i--;) {
+            result = result * first + a[i];
+        }
+        return result;
+    }
 
     // II
     template<typename U, std::size_t K>
@@ -205,62 +335,13 @@ private:
 // TODO: organize this later
 
 
-template <typename U>
-struct is_poly : std::false_type{};
-
-template <typename U, std::size_t M>
-struct is_poly<poly<U, M>> : std::true_type{};
-
-template<typename U>
-constexpr bool is_poly_v = is_poly<U>::value;
-
-template<typename X, typename A>
-struct eval_type {
-    using type = std::common_type_t<X, A>;
-};
-
-template<typename T, std::size_t N, typename U>
-struct eval_type<poly<T, N>, U> {
-    using type = poly<std::common_type_t<T, U>, N>;
-};
-
-template<typename T, std::size_t N, typename U>
-struct eval_type<U, poly<T, N>> {
-    using type = poly<std::common_type_t<T, U>, N>;
-};
-
-
-template<typename T, std::size_t N, typename U, std::size_t M>
-struct eval_type<poly<T, N>, poly<U, M>> {
-    using type = poly<std::common_type_t<T, U>, (N - 1) * (M - 1) + 1>;
-};
-
-template<typename X, typename A>
-using eval_type_t = eval_type<X, A>::type;
 
 
 
-template<typename T, std::size_t N>
-template<typename U, typename... Args>
-requires(true) // TODO: muszę uzupełnić
-constexpr auto poly<T, N>::at(const U& first, Args&&... args) const {
-    if constexpr (is_poly_v<T>) {
-        auto son_result = a[N - 1].at(std::forward<Args>(args)...);
-        eval_type_t<U, decltype(son_result)> result = son_result;
-        for(int i = N - 2; i >= 0; --i) {
-            result = result * first + a[i].at(std::forward<Args>(args)...);
-        }
-        return result;
-    } 
-    else {
-        typename std::common_type<T, U>::type result = a[N - 1];
-        for (int i = N - 2; i >= 0; --i) {
-            result = result * first + a[i];
-        }
-        return result;
-   }
-    
-}
+
+
+
+
 
 
 template<typename T_From, std::size_t N_From, typename T_To, std::size_t N_To>
@@ -294,64 +375,9 @@ struct std::common_type<poly<T, N>, poly<U, M>> {
     using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
 };
 
-template<typename T, std::size_t N>
-template<typename U, std::size_t M>
-constexpr auto poly<T, N>::operator+(const poly<U, M>& other) const {
-    typename std::common_type<poly<T, N>, poly<U, M>>::type result;
-    for (size_t i = 0; i < std::max(N, M); ++i) 
-        result[i] = a[i] + other.a[i];
-    
-    return result;
-}   
 
-template<typename T, std::size_t N>
-template<typename U, std::size_t M>
-constexpr auto poly<T, N>::operator-(const poly<U, M>& other) const {
-    typename std::common_type<poly<T, N>, poly<U, M>>::type result;
-    for (size_t i = 0; i < std::max(N, M); ++i) 
-        result[i] = a[i] - other[i];
-    
-    return result;
-}   
 
-template<typename T, std::size_t N>
-template<typename U, std::size_t M>
-constexpr auto poly<T, N>::operator*(const poly<U, M>& other) const {
-    if (N == 0 || M == 0) {
-        return poly<T, 0>();
-    }
-    poly<std::common_type<T, U>, N + M - 1> result; // TODO: co jesli N + M - 1 > SIZE_T_MAX?
-    for (size_t i = 0; i < N; ++i) 
-        for (size_t j = 0; j < M; ++j) 
-            result[i + j] += a[i] * other[j];
 
-    return result;
-}
-
-template<typename T, std::size_t N>
-template<typename U>
-constexpr auto poly<T, N>::operator-(const U& other) const {
-    typename std::common_type<poly<T, N>, U>::type result(this);
-    result[0] -= other;
-    return result;
-}  
-
-template<typename T, std::size_t N>
-template<typename U>
-constexpr auto poly<T, N>::operator+(const U& other) const {
-    typename std::common_type<poly<T, N>, U>::type result = *this;
-    result[0] += other;
-    return result;
-}  
-
-template<typename T, std::size_t N>
-template<typename U>
-constexpr auto poly<T, N>::operator*(const U& other) const {
-    typename std::common_type<poly<T, N>, U>::type result = *this;
-    for (auto& x: result.a)
-        x *= other;
-    return result;
-} 
 
 template<typename U, typename T, std::size_t N>
 constexpr auto operator-(const U& x, const poly<T, N>& y) {
@@ -376,8 +402,8 @@ constexpr poly<poly<T, N>, 1> const_poly(poly<T, N> p) {
 
 // FUNKCJA CROSS
 template <typename T, std::size_t N, typename U, std::size_t M>
-constexpr auto cross(const poly<T, N>& p, const poly<U, M>& q) -> poly<std::common_type<T, U>, N + M> {
-    poly<std::common_type<T, U>, N + M> result;
+constexpr auto cross(const poly<T, N>& p, const poly<U, M>& q) -> poly<std::common_type_t<T, U>, N + M> {
+    poly<std::common_type_t<T, U>, N + M> result;
 
     for (std::size_t i = 0; i < N; i++) {
         for (std::size_t j = 0; j < M; j++) {
