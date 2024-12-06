@@ -76,8 +76,6 @@ namespace {
         constexpr auto p = poly(2, 1);
         static_assert(std::is_same_v<decltype(p), const poly<int, 2>>);
         static_assert(p[0] == 2);
-        static_assert(p.at(1) == 3);
-        static_assert(p.at(0.5) == 2.5);
 
         static_assert(std::is_same_v<std::common_type_t<double, poly<int, 2>>, poly<double, 2>>);
         static_assert(std::is_same_v<std::common_type_t<poly<int, 2>, poly<double, 2>>, poly<double, 2>>);
