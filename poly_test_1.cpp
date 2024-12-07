@@ -18,6 +18,7 @@ namespace
   {
     
     constexpr auto p = poly(2, 1);
+    static_assert(p * 4.0 == poly(8.0, 4.0));
     static_assert(p + poly(2, 1) == poly(4, 2));
     static_assert(std::is_same_v<decltype(p), const poly<int, 2>>);
     static_assert(p[0] == 2);
@@ -28,7 +29,7 @@ namespace
     static_assert(std::is_same_v<std::common_type_t<double, poly<int, 2>>, poly<double, 2>>);
     static_assert(std::is_same_v<std::common_type_t<poly<int, 2>, poly<double, 2>>, poly<double, 2>>);
 
-    constexpr auto q = poly(poly(1.0, 2.0), 3.0, 4.0);
+     constexpr auto q = poly(poly(1.0, 2.0), 3.0, 4.0);
     static_assert(std::is_same_v<decltype(q), const poly<poly<double, 2>, 3>>);
     static_assert(q[0][0] == 1.0);
     static_assert(q[0][1] == 2.0);
@@ -41,6 +42,7 @@ namespace
     static_assert(q.at(2.0, 3.0, 4.0) == 29.0);
     static_assert(q.at(2.0) == poly(23.0, 2.0));
     static_assert(q.at(2.0).at(3.0) == q.at(2.0, 3.0));
+    static_assert(q.at(p)[1] == 21.0);
     static_assert(q.at(p) == poly(23.0, 21.0, 4.0, 0.0));
     static_assert(q.at(-1, p) == poly(6.0, 2.0));
     static_assert(q.at(std::array{2.0, 3.0}) == 29.0);
