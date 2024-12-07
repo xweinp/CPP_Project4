@@ -68,8 +68,8 @@ public:
     // OPERATORY PRZYPISANIA
     // TODO: declare and implement
     template <typename U, std::size_t M>
-    requires (std::convertible_to<poly<U, M>, poly<T, N>>)
-    auto operator=(const poly<U, M>& other) const -> poly<T, N>& { // to raczej nie moze byc constexpr
+    requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
+    auto operator=(const poly<U, M>& other) -> poly<T, N>& {
         if (this != static_cast<decltype(this)>(&other)) {
             assign_elements(other);
         }
@@ -77,7 +77,7 @@ public:
     }
     
     template <typename U, std::size_t M>
-    requires (std::convertible_to<poly<U, M>, poly<T, N>>)
+    requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
     constexpr auto operator=(poly<U, M>&& other) -> poly<T, N>& {
         if (this != static_cast<decltype(this)>(&other)) {
            assign_elements(std::move(other));
@@ -315,16 +315,16 @@ constexpr auto operator-(const T& x, const U& y) {
 // *
 
 template<typename T, std::size_t N, typename U>
-requires ((!is_poly_v<U>) && std::is_convertible_v<U, T>)
+requires ((!is_poly_v<U>) && (std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
 constexpr auto operator*(const poly<T, N>& x, const U& y) {
-    std::common_type_t<poly<T, N>, U> res = x;
+    poly<std::common_type_t<T, U>, N> res;
     for (size_t i = 0; i < N; ++i)
-        res[i] *= y;
+        res[i] = x[i] * y;
     return res;
 }
 
 template<typename T, std::size_t N, typename U>
-requires ((!is_poly_v<U>) && std::is_convertible_v<U, T>)
+requires ((!is_poly_v<U>) && (std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
 constexpr auto operator*(const U& y, const poly<T, N>& x) {
     return x * y;
 }
