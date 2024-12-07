@@ -251,29 +251,35 @@ public:
     template<typename U, typename... Args>
     constexpr auto at(const U& first, Args&&... args) const 
     requires(is_poly_v<T>) { // TODO: uzupelnic pozniej
-            auto son_result = a[N - 1].at(std::forward<Args>(args)...);
-            eval_type_t<U, decltype(son_result)> result = son_result;
-            for(size_t i = N - 1; 0 < i--;) {
-                result *= first;
-                result += a[i].at(std::forward<Args>(args)...);
-            }
-            return result;
+        return mult_at<U, 0>(first, std::forward<Args>(args)...);
         
     }
 
     template<typename U, typename... Args>
     constexpr auto at(const U& first, [[maybe_unused]] Args&&... args) const 
     requires(!is_poly_v<T>) { // TODO: muszę uzupełnić
-        return mult_at(first, N - 1);
+        return mult_at<U, 0>(first);
     }
 
     // TODO: make me private
-    template<typename U>
-    constexpr auto mult_at(const U& first, size_t i) const {
-        if (i == 0) {
-            return a[i];
-        }
-        return first * (a[i] + mult_at(first, i - 1));
+    template<typename U, std::size_t I>
+    requires (!is_poly_v<T>)
+    constexpr auto mult_at(const U& first) const {
+        if constexpr (I == N - 1) 
+            return a[I];
+        else
+            return first * mult_at<U, I + 1>(first) + a[I];
+    }
+
+    template<typename U, std::size_t I, typename... Args>
+    requires (is_poly_v<T>)
+    constexpr auto mult_at(const U& first, Args&&... args) const {
+        auto son_res = a[I].at(std::forward<Args>(args)...);
+        if constexpr (I == N - 1) 
+            return son_res;
+        else
+            return  first * mult_at<U, I + 1>(first, std::forward<Args>(args)...)
+                    + son_res;
     }
 
     // II
