@@ -6,7 +6,6 @@
 #include <concepts>
 #include <vector>
 
-
 // Ze względu na użycie auto w definicji metody at nie byłem w stanie 
 // zadeklarować jej poza klasą, więc zadeklarowałem ją wewnątrz klasy.
 // no i to zmusilo mnie do wrzucenia tutaj odrobiny smieci xD.
@@ -47,6 +46,7 @@ struct eval_type<poly<T, N>, poly<U, M>> {
 
 template<typename X, typename A>
 using eval_type_t = eval_type<X, A>::type;
+
 
 
 template <typename T, std::size_t N = 0> 
@@ -193,7 +193,6 @@ public:
             if (i < N)
                 result[i] = result[i] + a[i];
         }
-        
         return result;
     }   
 
@@ -207,7 +206,6 @@ public:
             if (i < N)
                 result[i] = result[i] + a[i];
         }
-        
         return result;
     }  
 
@@ -271,9 +269,30 @@ public:
         return result;
     }
 
+
     template<typename U, typename... Args>
-    requires(true) // TODO: muszę uzupełnić
-    constexpr auto at(const U& first, Args&&... args) const;
+    constexpr auto at(const U& first, Args&&... args) const 
+    requires(is_poly_v<T>) { // TODO: uzupelnic pozniej
+            auto son_result = a[N - 1].at(std::forward<Args>(args)...);
+            eval_type_t<U, decltype(son_result)> result = son_result;
+            for(size_t i = N - 1; 0 < i--;) {
+                result *= first;
+                result += a[i].at(std::forward<Args>(args)...);
+            }
+            return result;
+        
+    }
+
+    template<typename U, typename... Args>
+    constexpr auto at(const U& first, [[maybe_unused]] Args&&... args) const 
+    requires(!is_poly_v<T>) { // TODO: muszę uzupełnić
+        eval_type_t<U, T> result = a[N - 1];
+        for (size_t i = N - 1; 0 < i--;) {
+            result *= first; // TODO: fix me! trzeba dodac prywatna metode fake_multiply
+            result += a[i]; 
+        }
+        return result;
+    }
 
     // II
     template<typename U, std::size_t K>
@@ -320,6 +339,7 @@ private:
 // TODO: organize this later
 
 
+
 template<typename T_From, std::size_t N_From, typename T_To, std::size_t N_To>
 struct std::is_convertible<poly<T_From, N_From>, poly<T_To, N_To>> {
     static constexpr bool value = (std::is_convertible_v<T_From, T_To>) && (N_To >= N_From);
@@ -349,6 +369,8 @@ template <typename T, std::size_t N, typename U, std::size_t M>
 struct std::common_type<poly<T, N>, poly<U, M>> {
     using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
 };
+
+
 
 template<typename U, typename T, std::size_t N>
 constexpr auto operator-(const U& x, const poly<T, N>& y) {
@@ -383,6 +405,7 @@ constexpr std::common_type<T, poly<U, M>> cross(const T& p, const poly<U, M>& q)
 template <typename T, std::size_t N, typename U, std::size_t M>
 constexpr poly<std::common_type<T, poly<U, M>>, N> cross(const poly<T, N>& p, const poly<U, M>& q) {
     poly<std::common_type<T, poly<U, M>>, N> result;
+
 
     for (std::size_t i = 0; i < N; i++) {
         result[i] = cross(p[i], q);
