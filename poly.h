@@ -4,7 +4,8 @@
 #include <cstddef>
 #include <type_traits>
 #include <concepts>
-#include <vector>
+#include <array>
+#include <functional>
 
 // Ze względu na użycie auto w definicji metody at nie byłem w stanie 
 // zadeklarować jej poza klasą, więc zadeklarowałem ją wewnątrz klasy.
@@ -45,7 +46,7 @@ struct eval_type<poly<T, N>, poly<U, M>> {
 };
 
 template<typename X, typename A>
-using eval_type_t = eval_type<X, A>::type;
+using eval_type_t = typename eval_type<X, A>::type;
 
 
 
@@ -131,29 +132,6 @@ public:
         return *this;
     }
 
-
-    template<typename U>
-    requires std::convertible_to<U, T>
-    poly<T, N>& operator+=(const U& u)  { 
-        a[0] += u;
-        return *this;
-    }
-
-    template<typename U>
-    requires std::convertible_to<U, T>
-    poly<T, N>& operator-=(const U& u)  {
-        a[0] -= u;
-        return *this;
-    }
-
-    template<typename U>
-    requires std::convertible_to<U, T>
-    poly<T, N>& operator*=(const U& u)  {
-        for (auto& x: a)
-            x *= u;
-        return *this;
-    }
-
     template<typename U>
     requires std::convertible_to<U, T>
     poly<T, N>& operator+=(U&& u)  { 
@@ -229,7 +207,7 @@ public:
 
 
     template<typename U>
-    constexpr auto operator-(const U& other) const 
+    constexpr auto operator-(U&& other) const 
     -> typename std::common_type_t<poly<T, N>, U>{
         typename std::common_type_t<poly<T, N>, U> result(*this);
         result[0] -= other;
@@ -237,7 +215,7 @@ public:
     }  
 
     template<typename U>
-    constexpr auto operator+(const U& other) const
+    constexpr auto operator+(U&& other) const
     -> typename std::common_type_t<poly<T, N>, U> {
         typename std::common_type_t<poly<T, N>, U> result = *this;
         result[0] += other;
@@ -245,7 +223,7 @@ public:
     }  
 
     template<typename U>
-    constexpr auto operator*(const U& other) const 
+    constexpr auto operator*(U&& other) const 
     -> typename std::common_type_t<poly<T, N>, U> {
         typename std::common_type_t<poly<T, N>, U> result = *this;
         for (auto& x: result.a)
@@ -286,12 +264,16 @@ public:
     template<typename U, typename... Args>
     constexpr auto at(const U& first, [[maybe_unused]] Args&&... args) const 
     requires(!is_poly_v<T>) { // TODO: muszę uzupełnić
-        eval_type_t<U, T> result = a[N - 1];
-        for (size_t i = N - 1; 0 < i--;) {
-            result *= first; // TODO: fix me! trzeba dodac prywatna metode fake_multiply
-            result += a[i]; 
+        return mult_at(first, N - 1);
+    }
+
+    // TODO: make me private
+    template<typename U>
+    constexpr auto mult_at(const U& first, size_t i) const {
+        if (i == 0) {
+            return a[i];
         }
-        return result;
+        return first * (a[i] + mult_at(first, i - 1));
     }
 
     // II
