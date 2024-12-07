@@ -42,7 +42,7 @@ namespace
     static_assert(q.at(2.0, 3.0, 4.0) == 29.0);
     static_assert(q.at(2.0) == poly(23.0, 2.0));
     static_assert(q.at(2.0).at(3.0) == q.at(2.0, 3.0));
-    static_assert(q.at(p)[1] == 21.0);
+    static_assert(q.at(p)[2] == 4.0);
     static_assert(q.at(p) == poly(23.0, 21.0, 4.0, 0.0));
     static_assert(q.at(-1, p) == poly(6.0, 2.0));
     static_assert(q.at(std::array{2.0, 3.0}) == 29.0);
