@@ -69,7 +69,7 @@ public:
     // TODO: declare and implement
     template <typename U, std::size_t M>
     requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
-    auto operator=(const poly<U, M>& other) -> poly<T, N>& {
+    constexpr auto operator=(const poly<U, M>& other) -> poly<T, N>& {
         if (this != static_cast<decltype(this)>(&other)) {
             assign_elements(other);
         }
@@ -91,7 +91,7 @@ public:
 
     template<typename U, std::size_t M>
     requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
-    poly<T, N>& operator+=(const poly<U, M>& other)  
+    constexpr poly<T, N>& operator+=(const poly<U, M>& other)  
     { // TODO: wsm troche problem kiedy this == other (bo other jest const ref)
         for (size_t i = 0; i < M; ++i) 
             a[i] += other[i];
@@ -100,7 +100,7 @@ public:
 
     template<typename U> 
     requires (std::is_convertible_v<U, T>) //moze to? ale wtedy specjalizacja moze sie zjebac
-    poly<T, N>& operator+=(const U& other)  
+    constexpr poly<T, N>& operator+=(const U& other)  
     { 
         a[0] += other;
         return *this;
@@ -109,7 +109,7 @@ public:
     // -= 
     template<typename U, std::size_t M>
     requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
-    poly<T, N>& operator-=(const poly<U, M>& other)  
+    constexpr poly<T, N>& operator-=(const poly<U, M>& other)  
     { // TODO: wsm troche problem kiedy this == other (bo other jest const ref)
         for (size_t i = 0; i < M; ++i) 
             a[i] -= other[i];
@@ -118,7 +118,7 @@ public:
 
     template<typename U> 
     requires (std::is_convertible_v<U, T>) //moze to? ale wtedy specjalizacja moze sie zjebac
-    poly<T, N>& operator-=(const U& other)  
+    constexpr poly<T, N>& operator-=(const U& other)  
     { 
         a[0] -= other;
         return *this;
@@ -127,7 +127,7 @@ public:
     // *=
     template<typename U>  
     requires (std::is_convertible_v<U, T>)
-    poly<T, N>& operator*=(const U& other)  {
+    constexpr poly<T, N>& operator*=(const U& other)  {
         for (auto& x: a)
             x *= other;
         return *this;
@@ -172,7 +172,7 @@ public:
 
     // II
     template<typename U, std::size_t K>
-    auto at(const std::array<U, K>& arargs) {
+    constexpr auto at(const std::array<U, K>& arargs) const {
         return std::apply([&](auto... args) {return at(args...);}, arargs);
     }
 
@@ -279,9 +279,14 @@ constexpr auto operator+(const U& y, const poly<T, N>& x) {
 template<typename T, typename U>
 requires (is_poly_v<T> && is_poly_v<U> && (std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
 constexpr auto operator+(const T& x, const U& y) {
-    std::common_type_t<T, U> res = x;
-    for (size_t i = 0; i < y.size(); ++i)
-        res[i] += y[i];
+    std::common_type_t<T, U> res;
+    for (size_t i = 0; i < std::max(x.size(), y.size()); ++i)
+    {
+        if (i < y.size())
+            res[i] += y[i];
+        if(i < x.size())
+            res[i] += x[i];
+    }
     return res;
 }
 
@@ -290,25 +295,34 @@ constexpr auto operator+(const T& x, const U& y) {
 template<typename T, std::size_t N, typename U>
 requires ((!is_poly_v<U>) && std::is_convertible_v<U, T>)
 constexpr auto operator-(const poly<T, N>& x, const U& y) {
-    std::common_type_t<poly<T, N>, U> res = x;
-    res[0] -= y;
+    std::common_type_t<poly<T, N>, U> res;
+    res[0] = x - y;
+    for (size_t i = 1; i < res.size(); ++i)
+        res[i] = x[i];  // TODO: brak konstruktora kopiującego jest bez senus: w efekcie i tak trzeba często kopiować
     return res;
 }
 
 template<typename T, std::size_t N, typename U>
 requires ((!is_poly_v<U>) && std::is_convertible_v<U, T>)
 constexpr auto operator-(const U& y, const poly<T, N>& x) {
-    std::common_type_t<poly<T, N>, U> res = -x;
-    res[0] += y;
+    std::common_type_t<poly<T, N>, U> res;
+    res[0] = y - x[0];
+    for (size_t i = 1; i < res.size(); ++i)
+        res[i] = -x[i];
     return res;
 }
 
 template<typename T, typename U>
 requires (is_poly_v<T> && is_poly_v<U> && (std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
 constexpr auto operator-(const T& x, const U& y) {
-    std::common_type_t<T, U> res = x;
-    for (size_t i = 0; i < y.size(); ++i)
-        res[i] -= y[i];
+    std::common_type_t<T, U> res;
+    for (size_t i = 0; i < std::max(x.size(), y.size()); ++i)
+    {
+        if (i < x.size())
+            res[i] += x[i];
+        if (i < y.size())
+            res[i] -= y[i];
+    }
     return res;
 } 
 
