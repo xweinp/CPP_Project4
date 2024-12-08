@@ -8,7 +8,7 @@
 #include <functional>
 
 // deklaracja poly
-template <typename T, size_t N> // TODO: czy nie przeszkadza nam, że tutaj N != 0?
+template <typename T, size_t N> 
 class poly;
 
 // template do sprawdzania czy typ jest wielomianem
