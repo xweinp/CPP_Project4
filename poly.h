@@ -302,15 +302,35 @@ struct std::common_type<poly<T, N>, poly<U, N>>
 };
 
 template <typename T, std::size_t N, typename U, std::size_t M>
-struct std::common_type<const poly<T, N> &, poly<U, M>>
+struct std::common_type<const poly<T, N>, const poly<U, M>>
+{
+    using type = const poly<std::common_type_t<T, U>, std::max(N, M)>;
+};
+
+template <typename T, std::size_t N, typename U, std::size_t M>
+struct std::common_type<const poly<T, N>, poly<U, M>>
 {
     using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
 };
 
 template <typename T, std::size_t N, typename U, std::size_t M>
-struct std::common_type<poly<T, N>, const poly<U, M> &>
+struct std::common_type<poly<T, N>, const poly<U, M>>
 {
     using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
+};
+
+template <typename T, std::size_t N, typename U>
+requires (!detail::is_poly_v<U>)
+struct std::common_type<const poly<T, N>, U>
+{
+    using type = poly<std::common_type_t<T, U>, N>;
+};
+
+template <typename T, std::size_t N, typename U>
+requires (!detail::is_poly_v<U>)
+struct std::common_type<U, const poly<T, N>>
+{
+    using type = poly<std::common_type_t<T, U>, N>;
 };
 
 template <typename T, std::size_t N, typename U, std::size_t M>
