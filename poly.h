@@ -108,31 +108,67 @@ public:
 
     // OPERATORY ARYTMETYCZNE
 
+
+    // TODO: co się dzieje, w przypadku a +=/-=/*= a? czy to ifować?
+    // TODO: idk czy nie wykonuję przez przypadek nadmiarowych kopii, o których mowa na forum.
+
     // +=
     template <typename U, std::size_t M>
         requires(std::is_convertible_v<poly<U, M>, poly<T, N>>)
-    constexpr poly<T, N> &operator+=(const poly<U, M> &other);
+    constexpr poly<T, N> &operator+=(const poly<U, M> &other) {
+        for (size_t i = 0; i < M; ++i)
+            a[i] += other[i];
+        return *this;
+    }
+
+
+    // TODO: zdaje sie, że poly<poly<double, 2>, 2> + poly<int, 2>
+    // może nie wiedzieć, którego operatora + użyć
+
 
     template <typename U>
         requires(std::is_convertible_v<U, T>) 
-    constexpr poly<T, N> &operator+=(const U &other);
+    constexpr poly<T, N> &operator+=(const U &other) 
+    {
+        a[0] += other;
+        return *this;
+    }
 
     // -=
     template <typename U, std::size_t M>
         requires(std::is_convertible_v<poly<U, M>, poly<T, N>>)
-    constexpr poly<T, N> &operator-=(const poly<U, M> &other);
+    constexpr poly<T, N> &operator-=(const poly<U, M> &other) {
+        for (size_t i = 0; i < M; ++i)
+            a[i] -= other[i];
+        return *this;
+    }
 
     template <typename U>
         requires(std::is_convertible_v<U, T>) 
-    constexpr poly<T, N> &operator-=(const U &other);
+    constexpr poly<T, N> &operator-=(const U &other) {
+        a[0] -= other;
+        return *this;
+    }
+
+    // TODO: zdaje sie, że poly<poly<double, 2>, 2> - poly<int, 2>
+    // może nie wiedzieć, którego operatora + użyć
 
     // *=
     template <typename U>
         requires(std::is_convertible_v<U, T>)
-    constexpr poly<T, N> &operator*=(const U &other);
+    constexpr poly<T, N> &operator*=(const U &other) {
+        for (auto &x : a)
+            x *= other;
+        return *this;
+    }
 
     // unary-
-    constexpr poly<T, N> operator-() const;
+    constexpr poly<T, N> operator-() const {
+        poly<T, N> res;
+        for (size_t i = 0; i < N; ++i)
+            res[i] = -a[i];
+        return res;
+    }
 
     // OPERATOR INDEKSUJĄCY
     constexpr T &operator[](std::size_t i)
@@ -281,78 +317,6 @@ struct std::common_type<U, poly<T, N>>
 
 // OPERATORY ARYTMETYCZNE
 
-// TODO: co się dzieje, w przypadku a +=/-=/*= a? czy to ifować?
-// TODO: idk czy nie wykonuję przez przypadek nadmiarowych kopii, o których mowa na forum.
-
-// +=
-
-// TODO: zdaje sie, że poly<poly<double, 2>, 2> + poly<int, 2>
-// może nie wiedzieć, którego operatora + użyć
-
-template <typename T, std::size_t N>
-template <typename U, std::size_t M>
-    requires(std::is_convertible_v<poly<U, M>, poly<T, N>>)
-constexpr poly<T, N> &poly<T, N>::operator+=(const poly<U, M> &other)
-{
-    for (size_t i = 0; i < M; ++i)
-        a[i] += other[i];
-    return *this;
-}
-
-template <typename T, std::size_t N>
-template <typename U>
-    requires(std::is_convertible_v<U, T>)
-constexpr poly<T, N> &poly<T, N>::operator+=(const U &other)
-{
-    a[0] += other;
-    return *this;
-}
-
-// -=
-
-// TODO: zdaje sie, że poly<poly<double, 2>, 2> - poly<int, 2>
-// może nie wiedzieć, którego operatora + użyć
-
-template <typename T, std::size_t N>
-template <typename U, std::size_t M>
-    requires(std::is_convertible_v<poly<U, M>, poly<T, N>>)
-constexpr poly<T, N> &poly<T, N>::operator-=(const poly<U, M> &other)
-{
-    for (size_t i = 0; i < M; ++i)
-        a[i] -= other[i];
-    return *this;
-}
-
-template <typename T, std::size_t N>
-template <typename U>
-    requires(std::is_convertible_v<U, T>)
-constexpr poly<T, N> &poly<T, N>::operator-=(const U &other)
-{
-    a[0] -= other;
-    return *this;
-}
-
-// *=
-
-template <typename T, std::size_t N>
-template <typename U>
-    requires(std::is_convertible_v<U, T>)
-constexpr poly<T, N> &poly<T, N>::operator*=(const U &other)
-{
-    for (auto &x : a)
-        x *= other;
-    return *this;
-}
-
-// unary-
-template <typename T, std::size_t N>
-constexpr poly<T, N> poly<T, N>::operator-() const
-{
-    poly<T, N> res;
-    for (size_t i = 0; i < N; ++i)
-        res[i] = -a[i];
-    return res;
-}
 
 // +
 
