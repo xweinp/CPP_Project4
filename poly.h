@@ -15,7 +15,6 @@ class poly;
 
 namespace detail
 {
-
     template <typename U>
     struct is_poly : std::false_type
     {
@@ -28,18 +27,7 @@ namespace detail
 
     template <typename U>
     inline constexpr bool is_poly_v = is_poly<U>::value;
-
 }
-
-// TODO: da się zbić niektóre requires do wspólnych template'ów (może niektóre warto)
-// TODO: są trochę pomieszane is_convertible z convertible:to, tak samo z
-// TODO: czy może istnić poly z N = 0? jeśli tak to trzeba go wyifować w operatorach arytmetycznych
-// TODO: niektore ify zapewne moge zmienc na if constexpr
-// TODO: ogarnąć co jest z tym konstruktorem kopiującym i przenoszącym
-// TODO: dokończyć cross
-// TODO: idk czy napewno definicje operatorów mogą być wyrzucone poza klasę
-//       chciałem wyrzucić wszystkie metody dłuższe niż kilka linijek
-//       vscode cos podkresla, ale kod sie kompiluje
 
 template <typename T, std::size_t N = 0>
 class poly
@@ -83,7 +71,6 @@ public:
 
     // Konstruktor wieloargumentowy (dwa lub więcej argumentów) tworzy wielomian o współczynnikach takich jak wartości kolejnych argumentów.
     // Liczba argumentów powinna być nie większa niż rozmiar wielomianu N, a typ każdego argumentu powinien być r-referencją do typu konwertowalnego do typu T.
-    // Wymagamy użycia „perfect forwarding”, patrz std::forward.
 
     template <typename... U>
     constexpr poly(U &&...args)
@@ -97,11 +84,7 @@ public:
         }
     }
 
-    // ^^^^^^^^^^^^
-    // Należy zapoznać się z szablonem std::is_convertible i konceptem std::convertible_to
-
     // OPERATORY PRZYPISANIA
-    // TODO: declare and implement
     template <typename U, std::size_t M>
         requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
     constexpr auto operator=(const poly<U, M> &other) -> poly<T, N> &
