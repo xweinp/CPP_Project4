@@ -358,11 +358,11 @@ constexpr auto operator+(const U &y, const poly<T, N> &x)
     return x + y;
 }
 // Oba argumenty to wielomiany
-template <typename T, typename U>
-    requires(detail::is_poly_v<T> && detail::is_poly_v<U> && (std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
-constexpr auto operator+(const T &x, const U &y)
+template <typename T, size_t N, typename U, size_t M>
+    requires(std::is_convertible_v<U, T> || std::is_convertible_v<T, U>)
+constexpr auto operator+(const poly<T, N> &x, const poly<U, M> &y)
 {
-    std::common_type_t<T, U> res;
+    poly<std::common_type_t<T, U>, std::max(N, M)> res;
     size_t both = std::min(x.size(), y.size());
     size_t i = 0;
     while (i < both)
@@ -403,11 +403,11 @@ constexpr auto operator-(const U &y, const poly<T, N> &x)
     return res;
 }
 // Oba argumenty to wielomiany
-template <typename T, typename U>
-    requires(detail::is_poly_v<T> && detail::is_poly_v<U> && (std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
-constexpr auto operator-(const T &x, const U &y)
+template <typename T, size_t N, typename U, size_t M>
+    requires((std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
+constexpr auto operator-(const poly<T, N> &x, const poly<U, M> &y)
 {
-    std::common_type_t<T, U> res;
+    poly<std::common_type_t<T, U>, std::max(N, M)> res;
     size_t both = std::min(x.size(), y.size());
     size_t i = 0;
     while (i < both)
