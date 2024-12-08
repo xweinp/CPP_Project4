@@ -11,10 +11,10 @@
 template <typename T, size_t N> 
 class poly;
 
-// template do sprawdzania czy typ jest wielomianem
 
 namespace detail
 {
+    // template do sprawdzania czy typ jest wielomianem
     template <typename U>
     struct is_poly : std::false_type
     {
@@ -42,7 +42,9 @@ public:
     // Konstruktor bezargumentowy tworzy wielomian tożsamościowo równy zeru
     constexpr poly() : a() {}
 
-    // Konstruktor kopiujący bądź przenoszący (jednoargumentowe), których argument jest odpowiednio typu const poly<U, M>& bądź poly<U, M>&&, gdzie M <= N, a typ U jest konwertowalny do typu T.
+    // Konstruktor kopiujący bądź przenoszący (jednoargumentowe), których argument 
+    // jest odpowiednio typu const poly<U, M>& bądź poly<U, M>&&, gdzie M <= N, 
+    // a typ U jest konwertowalny do typu T.
 
     template <typename U, size_t M>
     constexpr poly(const poly<U, M> &other)
@@ -61,7 +63,8 @@ public:
         init(std::forward<poly<U, M>>(other));
     }
 
-    // Konstruktor konwertujący (jednoargumentowy) o argumencie typu konwertowalnego do typu T tworzy wielomian rozmiaru 1.
+    // Konstruktor konwertujący (jednoargumentowy) o argumencie typu konwertowalnego 
+    // do typu T tworzy wielomian rozmiaru 1.
     template <typename U>
     constexpr poly(U other)
         requires std::convertible_to<U, T>
@@ -69,8 +72,10 @@ public:
     {
     }
 
-    // Konstruktor wieloargumentowy (dwa lub więcej argumentów) tworzy wielomian o współczynnikach takich jak wartości kolejnych argumentów.
-    // Liczba argumentów powinna być nie większa niż rozmiar wielomianu N, a typ każdego argumentu powinien być r-referencją do typu konwertowalnego do typu T.
+    // Konstruktor wieloargumentowy (dwa lub więcej argumentów) tworzy wielomian 
+    // o współczynnikach takich jak wartości kolejnych argumentów.
+    // Liczba argumentów powinna być nie większa niż rozmiar wielomianu N, 
+    // a typ każdego argumentu powinien być r-referencją do typu konwertowalnego do typu T.
 
     template <typename... U>
     constexpr poly(U &&...args)
