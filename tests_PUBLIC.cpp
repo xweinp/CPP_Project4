@@ -345,8 +345,8 @@ constexpr void nested_poly() {
             std::common_type_t<poly<int, 2>,
                                poly<poly<poly<poly<double, 1>, 2>, 1>, 1>>,
             poly<poly<poly<poly<double, 1>, 2>, 1>, 2>>);
-    // static_assert(poly(poly(2.0), poly(3.0, 4.0)) + poly(1, 2, 3) ==
-    //               poly(poly(3.0, 0.0), poly(5.0, 4.0), poly(3.0, 0.0)));
+    static_assert(poly(poly(2.0), poly(3.0, 4.0)) + poly(1, 2, 3) ==
+                  poly(poly(3.0, 0.0), poly(5.0, 4.0), poly(3.0, 0.0)));
     static_assert(std::is_same_v<decltype(poly(poly(2.0), poly(3.0, 4.0)) +
                                           poly(1, 2, 3)),
                                  poly<poly<double, 2>, 3>>);

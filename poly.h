@@ -46,7 +46,7 @@ public:
 
     template <typename U, size_t M>
     constexpr poly(const poly<U, M> &other)
-        requires (N >= M) && (std::convertible_to<U, T>)
+        requires(N >= M) && (std::convertible_to<U, T>)
     {
         for (size_t i = 0; i < M; i++)
         {
@@ -74,7 +74,7 @@ public:
 
     template <typename... U>
     constexpr poly(U &&...args)
-        requires (sizeof...(args) >= 2) && (sizeof...(args) <= N)
+        requires(sizeof...(args) >= 2) && (sizeof...(args) <= N)
         : a{}
     {
         T arr[] = {static_cast<T>(std::forward<U>(args))...};
@@ -86,7 +86,7 @@ public:
 
     // OPERATORY PRZYPISANIA
     template <typename U, size_t M>
-        requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
+        requires(std::is_convertible_v<poly<U, M>, poly<T, N>>)
     constexpr auto operator=(const poly<U, M> &other) -> poly<T, N> &
     {
         if (!is_same_object(other))
@@ -95,7 +95,7 @@ public:
     }
 
     template <typename U, size_t M>
-        requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
+        requires(std::is_convertible_v<poly<U, M>, poly<T, N>>)
     constexpr auto operator=(poly<U, M> &&other) -> poly<T, N> &
     {
         if (!is_same_object(other))
@@ -107,7 +107,7 @@ public:
 
     // +=
     template <typename U, size_t M>
-        requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
+        requires(std::is_convertible_v<poly<U, M>, poly<T, N>>)
     constexpr poly<T, N> &operator+=(const poly<U, M> &other)
     {
         for (size_t i = 0; i < M; ++i)
@@ -116,7 +116,7 @@ public:
     }
 
     template <typename U>
-        requires (std::is_convertible_v<U, T>)
+        requires(std::is_convertible_v<U, T>)
     constexpr poly<T, N> &operator+=(const U &other)
     {
         a[0] += other;
@@ -125,8 +125,8 @@ public:
 
     // -=
     template <typename U, size_t M>
-        requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
-    constexpr poly<T, N> &operator-=(const poly<U, M> &other) 
+        requires(std::is_convertible_v<poly<U, M>, poly<T, N>>)
+    constexpr poly<T, N> &operator-=(const poly<U, M> &other)
     {
         for (size_t i = 0; i < M; ++i)
             a[i] -= other[i];
@@ -134,7 +134,7 @@ public:
     }
 
     template <typename U>
-        requires (std::is_convertible_v<U, T>)
+        requires(std::is_convertible_v<U, T>)
     constexpr poly<T, N> &operator-=(const U &other)
     {
         a[0] -= other;
@@ -143,7 +143,7 @@ public:
 
     // *=
     template <typename U>
-        requires (std::is_convertible_v<U, T>)
+        requires(std::is_convertible_v<U, T>)
     constexpr poly<T, N> &operator*=(const U &other)
     {
         for (auto &x : a)
@@ -267,7 +267,7 @@ private:
     template <typename U>
     constexpr bool is_same_object(const U &other) const
     {
-        return (static_cast<const void*>(this) != static_cast<const void*>(&other));
+        return (static_cast<const void *>(this) != static_cast<const void *>(&other));
     }
 };
 
@@ -303,14 +303,14 @@ struct std::common_type<poly<T, N>, const poly<U, M>>
 };
 
 template <typename T, size_t N, typename U>
-requires (!detail::is_poly_v<U>)
+    requires(!detail::is_poly_v<U>)
 struct std::common_type<const poly<T, N>, U>
 {
     using type = poly<std::common_type_t<T, U>, N>;
 };
 
 template <typename T, size_t N, typename U>
-requires (!detail::is_poly_v<U>)
+    requires(!detail::is_poly_v<U>)
 struct std::common_type<U, const poly<T, N>>
 {
     using type = poly<std::common_type_t<T, U>, N>;
@@ -448,7 +448,7 @@ constexpr auto operator*(const U &y, const poly<T, N> &x)
 }
 // Oba argumenty to wielomiany
 template <typename T, size_t N, typename U, size_t M>
-    requires ((std::is_convertible_v<U, T> || std::is_convertible_v<T, U>) && (N > 0 && M > 0))
+    requires((std::is_convertible_v<U, T> || std::is_convertible_v<T, U>) && (N > 0 && M > 0))
 constexpr auto operator*(const poly<T, N> &x, const poly<U, M> &y)
 {
     poly<decltype(x[0] * y[0]), N + M - 1> res;
@@ -459,10 +459,10 @@ constexpr auto operator*(const poly<T, N> &x, const poly<U, M> &y)
     return res;
 }
 template <typename T, size_t N, typename U, size_t M>
-    requires ((std::is_convertible_v<U, T> || std::is_convertible_v<T, U>) && (N == 0 || M == 0))
+    requires((std::is_convertible_v<U, T> || std::is_convertible_v<T, U>) && (N == 0 || M == 0))
 constexpr auto operator*([[maybe_unused]] const poly<T, N> &x, [[maybe_unused]] const poly<U, M> &y)
 {
-        return poly<std::common_type_t<T, U>, 0>{};
+    return poly<std::common_type_t<T, U>, 0>{};
 }
 
 template <typename T_From, size_t N_From, typename T_To, size_t N_To>
