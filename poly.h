@@ -13,14 +13,18 @@ class poly;
 
 // template do sprawdzania czy typ jest wielomianem
 
-template <typename U>
-struct is_poly : std::false_type {};
+namespace detail {
+    
+    template <typename U>
+    struct is_poly : std::false_type {};
 
-template <typename U, std::size_t M>
-struct is_poly<poly<U, M>> : std::true_type {};
+    template <typename U, std::size_t M>
+    struct is_poly<poly<U, M>> : std::true_type {};
 
-template <typename U>
-inline constexpr bool is_poly_v = is_poly<U>::value;
+    template <typename U>
+    inline constexpr bool is_poly_v = is_poly<U>::value;
+
+}
 
 // TODO: da się zbić niektóre requires do wspólnych template'ów (może niektóre warto)
 // TODO: są trochę pomieszane is_convertible z convertible:to, tak samo z
@@ -191,14 +195,14 @@ public:
     // Kiedy T też jest wielomianem
     template <typename U, typename... Args>
     constexpr auto at(const U &first, Args &&...args) const
-        requires(is_poly_v<T>)
+        requires(detail::is_poly_v<T>)
     {
         return calc_at<U, 0, Args...>(first, std::forward<Args>(args)...);
     }
     // Kiedy T nie jest już wielomianem
     template <typename U, typename... Args>
     constexpr auto at(const U &first, [[maybe_unused]] Args &&...args) const
-        requires(!is_poly_v<T>)
+        requires(!detail::is_poly_v<T>)
     {
         return calc_at<U, 0>(first);
     }
@@ -248,7 +252,7 @@ private:
     // pomocnicze funkcje do at()
     // dla T, które nie są już wielomianami
     template <typename U, std::size_t I>
-        requires(!is_poly_v<T>)
+        requires(!detail::is_poly_v<T>)
     constexpr auto calc_at(const U &first) const
     {
         if constexpr (I == N - 1)
@@ -258,7 +262,7 @@ private:
     }
     // dla T, które są wielomianami rekurencyjnie wywołuję at()
     template <typename U, std::size_t I, typename... Args>
-        requires(is_poly_v<T>)
+        requires(detail::is_poly_v<T>)
     constexpr auto calc_at(const U &first, Args &&...args) const
     {
         auto son_res = a[I].at(std::forward<Args>(args)...);
@@ -302,14 +306,14 @@ struct std::common_type<poly<T, N>, poly<U, M>>
 };
 
 template <typename T, std::size_t N, typename U>
-requires (!is_poly_v<U> && std::convertible_to<U, T>)
+requires (!detail::is_poly_v<U> && std::convertible_to<U, T>)
 struct std::common_type<poly<T, N>, U>
 {
     using type = poly<std::common_type_t<T, U>, N>;
 };
 
 template <typename T, std::size_t N, typename U>
-requires (!is_poly_v<U> && std::convertible_to<U, T>)
+requires (!detail::is_poly_v<U> && std::convertible_to<U, T>)
 struct std::common_type<U, poly<T, N>>
 {
     using type = poly<std::common_type_t<T, U>, N>;
@@ -322,7 +326,7 @@ struct std::common_type<U, poly<T, N>>
 
 // Tylko lewy argument to wielomian
 template <typename T, std::size_t N, typename U>
-    requires((!is_poly_v<U>) && std::is_convertible_v<U, T>)
+    requires((!detail::is_poly_v<U>) && std::is_convertible_v<U, T>)
 constexpr auto operator+(const poly<T, N> &x, const U &y)
 {
     std::common_type_t<poly<T, N>, U> res;
@@ -334,14 +338,14 @@ constexpr auto operator+(const poly<T, N> &x, const U &y)
 
 // Tylko prawy argument to wielomian
 template <typename T, std::size_t N, typename U>
-    requires((!is_poly_v<U>) && std::is_convertible_v<U, T>)
+    requires((!detail::is_poly_v<U>) && std::is_convertible_v<U, T>)
 constexpr auto operator+(const U &y, const poly<T, N> &x)
 {
     return x + y;
 }
 // Oba argumenty to wielomiany
 template <typename T, typename U>
-    requires(is_poly_v<T> && is_poly_v<U> && (std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
+    requires(detail::is_poly_v<T> && detail::is_poly_v<U> && (std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
 constexpr auto operator+(const T &x, const U &y)
 {
     std::common_type_t<T, U> res;
@@ -358,7 +362,7 @@ constexpr auto operator+(const T &x, const U &y)
 // -
 // Tylko lewy argument to wielomian
 template <typename T, std::size_t N, typename U>
-    requires((!is_poly_v<U>) && std::is_convertible_v<U, T>)
+    requires((!detail::is_poly_v<U>) && std::is_convertible_v<U, T>)
 constexpr auto operator-(const poly<T, N> &x, const U &y)
 {
     std::common_type_t<poly<T, N>, U> res;
@@ -369,7 +373,7 @@ constexpr auto operator-(const poly<T, N> &x, const U &y)
 }
 // Tylko prawy argument to wielomian
 template <typename T, std::size_t N, typename U>
-    requires((!is_poly_v<U>) && std::is_convertible_v<U, T>)
+    requires((!detail::is_poly_v<U>) && std::is_convertible_v<U, T>)
 constexpr auto operator-(const U &y, const poly<T, N> &x)
 {
     std::common_type_t<poly<T, N>, U> res;
@@ -380,7 +384,7 @@ constexpr auto operator-(const U &y, const poly<T, N> &x)
 }
 // Oba argumenty to wielomiany
 template <typename T, typename U>
-    requires(is_poly_v<T> && is_poly_v<U> && (std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
+    requires(detail::is_poly_v<T> && detail::is_poly_v<U> && (std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
 constexpr auto operator-(const T &x, const U &y)
 {
     std::common_type_t<T, U> res;
@@ -397,7 +401,7 @@ constexpr auto operator-(const T &x, const U &y)
 // *
 // Tylko lewy argument to wielomian
 template <typename T, std::size_t N, typename U>
-    requires((!is_poly_v<U>) && (std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
+    requires((!detail::is_poly_v<U>) && (std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
 constexpr auto operator*(const poly<T, N> &x, const U &y)
 {
     poly<std::common_type_t<T, U>, N> res;
@@ -407,7 +411,7 @@ constexpr auto operator*(const poly<T, N> &x, const U &y)
 }
 // Tylko prawy argument to wielomian
 template <typename T, std::size_t N, typename U>
-    requires((!is_poly_v<U>) && (std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
+    requires((!detail::is_poly_v<U>) && (std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
 constexpr auto operator*(const U &y, const poly<T, N> &x)
 {
     return x * y;
@@ -463,14 +467,14 @@ struct cross_type<T, poly<U, M>> {
 // FUNKCJA CROSS
 
 template <typename T, typename U, std::size_t M>
-constexpr auto cross(const T& p, const poly<U, M>& q) requires (!is_poly_v<T>) {
+constexpr auto cross(const T& p, const poly<U, M>& q) requires (!detail::is_poly_v<T>) {
     typename cross_type<T, poly<U, M>>::type result = p * q; 
     return result;
 }
 
 
 template <typename T, std::size_t N, typename U, std::size_t M>
-constexpr auto cross(const poly<T, N>& p, const poly<U, M>& q) requires (is_poly_v<poly<T, N>> && is_poly_v<poly<U, M>>) {
+constexpr auto cross(const poly<T, N>& p, const poly<U, M>& q) requires (detail::is_poly_v<poly<T, N>> && detail::is_poly_v<poly<U, M>>) {
     typename cross_type<poly<T, N>, poly<U, M>>::type result;
     for (std::size_t i = 0; i < N; i++) {
         result[i] = cross(p[i], q);
