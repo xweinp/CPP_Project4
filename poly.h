@@ -56,7 +56,6 @@ public:
 
     // Konstruktor kopiujący bądź przenoszący (jednoargumentowe), których argument jest odpowiednio typu const poly<U, M>& bądź poly<U, M>&&, gdzie M <= N, a typ U jest konwertowalny do typu T.
 
-    // TODO: upewnić się czy na pewno można
     template <typename U, std::size_t M>
     constexpr poly(const poly<U, M> &other)
         requires (N >= M) && (std::convertible_to<U, T>)
@@ -67,7 +66,6 @@ public:
         }
     }
 
-    // TODO: jeżeli na pewno można konstruktor kopiujący to można tu zmienić działanie
     template <typename U, std::size_t M>
     constexpr poly(poly<U, M> &&other)
         requires(N >= M) && (std::convertible_to<U, T>)
@@ -108,7 +106,7 @@ public:
         requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
     constexpr auto operator=(const poly<U, M> &other) -> poly<T, N> &
     {
-        if (this != static_cast<decltype(this)>(&other))
+        if (!is_same_object(other))
             assign_elements(other);
         return *this;
     }
@@ -117,15 +115,12 @@ public:
         requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
     constexpr auto operator=(poly<U, M> &&other) -> poly<T, N> &
     {
-        if (this != static_cast<decltype(this)>(&other))
+        if (!is_same_object(other))
             assign_elements(std::move(other));
         return *this;
     }
 
     // OPERATORY ARYTMETYCZNE
-
-    // TODO: co się dzieje, w przypadku a +=/-=/*= a? czy to ifować?
-    // TODO: idk czy nie wykonuję przez przypadek nadmiarowych kopii, o których mowa na forum.
 
     // +=
     template <typename U, std::size_t M>
@@ -136,9 +131,6 @@ public:
             a[i] += other[i];
         return *this;
     }
-
-    // TODO: zdaje sie, że poly<poly<double, 2>, 2> + poly<int, 2>
-    // może nie wiedzieć, którego operatora + użyć
 
     template <typename U>
         requires (std::is_convertible_v<U, T>)
@@ -151,7 +143,7 @@ public:
     // -=
     template <typename U, std::size_t M>
         requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
-    constexpr poly<T, N> &operator-=(const poly<U, M> &other) // TODO: chyba trzeba wywalic constexpr
+    constexpr poly<T, N> &operator-=(const poly<U, M> &other) 
     {
         for (size_t i = 0; i < M; ++i)
             a[i] -= other[i];
@@ -160,14 +152,11 @@ public:
 
     template <typename U>
         requires (std::is_convertible_v<U, T>)
-    constexpr poly<T, N> &operator-=(const U &other) // TODO: chyba trzeba wywalic constexpr
+    constexpr poly<T, N> &operator-=(const U &other)
     {
         a[0] -= other;
         return *this;
     }
-
-    // TODO: zdaje sie, że poly<poly<double, 2>, 2> - poly<int, 2>
-    // może nie wiedzieć, którego operatora + użyć
 
     // *=
     template <typename U>
@@ -242,9 +231,15 @@ private:
     {
         std::size_t i = 0;
         while (i < M)
-            a[i] = other[i++];
+        {
+            a[i] = other[i];
+            ++i;
+        }
         while (i < N)
-            a[i++] = 0;
+        {
+            a[i] = 0;
+            ++i;
+        }
     }
 
     template <typename U, std::size_t M>
@@ -284,6 +279,12 @@ private:
             return son_res;
         else
             return (first * calc_at<U, I + 1>(first, std::forward<Args>(args)...)) + son_res;
+    }
+
+    template <typename U>
+    constexpr bool is_same_object(const U &other) const
+    {
+        return (static_cast<const void*>(this) != static_cast<const void*>(&other));
     }
 };
 
@@ -360,12 +361,22 @@ constexpr auto operator+(const T &x, const U &y)
 {
     std::common_type_t<T, U> res;
     size_t both = std::min(x.size(), y.size());
-    for (size_t i = 0; i < both; ++i)
+    size_t i = 0;
+    while (i < both)
+    {
         res[i] = x[i] + y[i];
-    for (size_t i = both; i < x.size(); ++i)
+        ++i;
+    }
+    while (i < x.size())
+    {
         res[i] = x[i];
-    for (size_t i = both; i < y.size(); ++i)
+        ++i;
+    }
+    while (i < y.size())
+    {
         res[i] = y[i];
+        ++i;
+    }
     return res;
 }
 
@@ -395,12 +406,22 @@ constexpr auto operator-(const T &x, const U &y)
 {
     std::common_type_t<T, U> res;
     size_t both = std::min(x.size(), y.size());
-    for (size_t i = 0; i < both; ++i)
+    size_t i = 0;
+    while (i < both)
+    {
         res[i] = x[i] - y[i];
-    for (size_t i = both; i < x.size(); ++i)
+        ++i;
+    }
+    while (i < x.size())
+    {
         res[i] = x[i];
-    for (size_t i = both; i < y.size(); ++i)
+        ++i;
+    }
+    while (i < y.size())
+    {
         res[i] = -y[i];
+        ++i;
+    }
     return res;
 }
 
@@ -423,19 +444,22 @@ constexpr auto operator*(const U &y, const poly<T, N> &x)
     return x * y;
 }
 // Oba argumenty to wielomiany
-// TODO: czy odpowiednie zachowanie, kiedy jeden z wielomianow jest nizszego stopnia?
 template <typename T, std::size_t N, typename U, std::size_t M>
-    requires(std::is_convertible_v<U, T> || std::is_convertible_v<T, U>)
+    requires ((std::is_convertible_v<U, T> || std::is_convertible_v<T, U>) && (N > 0 && M > 0))
 constexpr auto operator*(const poly<T, N> &x, const poly<U, M> &y)
 {
-    if constexpr (N == 0 || M == 0)
-        return poly<std::common_type_t<T, U>, 0>{};
-    poly<std::common_type_t<T, U>, N + M - 1> res;
+    poly<decltype(x[0] * y[0]), N + M - 1> res;
     for (size_t i = 0; i < N; ++i)
         for (size_t j = 0; j < M; ++j)
-            res[i + j] = res[i + j] + x[i] * y[j];
+            res[i + j] = res[i + j] + (x[i] * y[j]);
 
     return res;
+}
+template <typename T, std::size_t N, typename U, std::size_t M>
+    requires ((std::is_convertible_v<U, T> || std::is_convertible_v<T, U>) && (N == 0 || M == 0))
+constexpr auto operator*([[maybe_unused]] const poly<T, N> &x, [[maybe_unused]] const poly<U, M> &y)
+{
+        return poly<std::common_type_t<T, U>, 0>{};
 }
 
 template <typename T_From, std::size_t N_From, typename T_To, std::size_t N_To>
