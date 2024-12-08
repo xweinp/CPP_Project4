@@ -47,6 +47,17 @@ public:
 
     // Konstruktor kopiujący bądź przenoszący (jednoargumentowe), których argument jest odpowiednio typu const poly<U, M>& bądź poly<U, M>&&, gdzie M <= N, a typ U jest konwertowalny do typu T.
 
+    // TODO: upewnić się czy na pewno można
+    template <typename U, std::size_t M>
+    constexpr poly(const poly<U, M> &other)
+        requires(N >= M) && (std::convertible_to<U, T>)
+    {
+        for (std::size_t i = 0; i < M; i++) {
+            a[i] = other[i];
+        }
+    }
+
+    // TODO: jeżeli na pewno można konstruktor kopiujący to można tu zmienić działanie
     template <typename U, std::size_t M>
     constexpr poly(poly<U, M> &&other)
         requires(N >= M) && (std::convertible_to<U, T>)
@@ -65,13 +76,11 @@ public:
     // Wymagamy użycia „perfect forwarding”, patrz std::forward.
 
     template <typename... U>
-    constexpr poly(U &&...args)
-        requires(sizeof...(args) >= 2) && (sizeof...(args) <= N) && (std::convertible_to<U, T> && ...)
-        : a{}
-    {
+    constexpr poly(U &&...args) requires (sizeof...(args) >= 2) && (sizeof...(args) <= N) : a{} {
         T arr[] = {static_cast<T>(std::forward<U>(args))...};
-        for (std::size_t i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < sizeof...(args); i++) {
             a[i] = arr[i];
+        }
     }
 
     // ^^^^^^^^^^^^
@@ -230,28 +239,44 @@ poly(U &&...) -> poly<std::common_type_t<U...>, sizeof...(U)>;
 
 // COMMON TYPE
 // reguły konwersji
+
+
 template <typename T, typename U, std::size_t N>
 struct std::common_type<poly<T, N>, poly<U, N>>
 {
     using type = poly<std::common_type_t<T, U>, N>;
 };
 
-template <typename T, std::size_t N, typename U>
-struct std::common_type<poly<T, N>, U>
+template <typename T, std::size_t N, typename U, std::size_t M>
+struct std::common_type<const poly<T, N>&, poly<U, M>>
 {
-    using type = poly<std::common_type_t<T, U>, N>;
+    using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
 };
 
-template <typename T, std::size_t N, typename U>
-struct std::common_type<U, poly<T, N>>
+template <typename T, std::size_t N, typename U, std::size_t M>
+struct std::common_type<poly<T, N>, const poly<U, M>&>
 {
-    using type = poly<std::common_type_t<T, U>, N>;
+    using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
 };
 
 template <typename T, std::size_t N, typename U, std::size_t M>
 struct std::common_type<poly<T, N>, poly<U, M>>
 {
     using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
+};
+
+template <typename T, std::size_t N, typename U>
+requires (!is_poly_v<U> && std::convertible_to<U, T>)
+struct std::common_type<poly<T, N>, U>
+{
+    using type = poly<std::common_type_t<T, U>, N>;
+};
+
+template <typename T, std::size_t N, typename U>
+requires (!is_poly_v<U> && std::convertible_to<U, T>)
+struct std::common_type<U, poly<T, N>>
+{
+    using type = poly<std::common_type_t<T, U>, N>;
 };
 
 // OPERATORY ARYTMETYCZNE
@@ -453,23 +478,39 @@ constexpr poly<poly<T, N>, 1> const_poly(poly<T, N> p)
     return res;
 }
 
+
+// CROSS TYPE
+template <typename T, typename U>
+struct cross_type {
+    using type = std::common_type_t<T, U>;
+};
+
+template <typename T, size_t N, typename U, size_t M>
+struct cross_type<poly<T, N>, poly<U, M>> {
+    using type = poly<typename cross_type<T, poly<U, M>>::type, N>;
+};
+
+
+template <typename T, typename U, size_t M>
+struct cross_type<T, poly<U, M>> {
+    using type = poly<std::common_type_t<T, U>, M>;
+};
+
 // FUNKCJA CROSS
 
 template <typename T, typename U, std::size_t M>
-constexpr std::common_type<T, poly<U, M>> cross(const T &p, const poly<U, M> &q)
-    requires(!is_poly_v<T>)
-{
-    std::common_type<T, poly<U, M>> result = p * q;
+constexpr auto cross(const T& p, const poly<U, M>& q) requires (!is_poly_v<T>) {
+    typename cross_type<T, poly<U, M>>::type result = p * q; 
     return result;
 }
 
-template <typename T, std::size_t N, typename U, std::size_t M>
-constexpr poly<std::common_type<T, poly<U, M>>, N> cross(const poly<T, N> &p, const poly<U, M> &q)
-{
-    poly<std::common_type<T, poly<U, M>>, N> result;
 
-    for (std::size_t i = 0; i < N; i++)
+template <typename T, std::size_t N, typename U, std::size_t M>
+constexpr auto cross(const poly<T, N>& p, const poly<U, M>& q) requires (is_poly_v<poly<T, N>> && is_poly_v<poly<U, M>>) {
+    typename cross_type<poly<T, N>, poly<U, M>>::type result;
+    for (std::size_t i = 0; i < N; i++) {
         result[i] = cross(p[i], q);
+    }
 
     return result;
 }
