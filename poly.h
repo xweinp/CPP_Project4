@@ -108,8 +108,7 @@ public:
         requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
     constexpr auto operator=(const poly<U, M> &other) -> poly<T, N> &
     {
-        if (this != static_cast<decltype(this)>(&other))
-            assign_elements(other);
+        assign_elements(other);
         return *this;
     }
 
@@ -117,8 +116,7 @@ public:
         requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
     constexpr auto operator=(poly<U, M> &&other) -> poly<T, N> &
     {
-        if (this != static_cast<decltype(this)>(&other))
-            assign_elements(std::move(other));
+        assign_elements(std::move(other));
         return *this;
     }
 
@@ -241,10 +239,14 @@ private:
     constexpr void assign_elements(const poly<U, M> &other)
     {
         std::size_t i = 0;
-        while (i < M)
-            a[i] = other[i++];
-        while (i < N)
-            a[i++] = 0;
+        while (i < M) {
+            a[i] = other[i];
+            i++;
+        }
+        while (i < N) {
+            a[i] = 0;
+            i++;
+        }
     }
 
     template <typename U, std::size_t M>
@@ -293,6 +295,38 @@ poly(U &&...) -> poly<std::common_type_t<U...>, sizeof...(U)>;
 
 // COMMON TYPE
 // reguły konwersji
+
+template <typename T, std::size_t N, typename U, std::size_t M>
+struct std::common_type<const poly<T, N>, const poly<U, M>>
+{
+    using type = const poly<std::common_type_t<T, U>, std::max(N, M)>;
+};
+
+template <typename T, std::size_t N, typename U, std::size_t M>
+struct std::common_type<const poly<T, N>, poly<U, M>>
+{
+    using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
+};
+
+template <typename T, std::size_t N, typename U, std::size_t M>
+struct std::common_type<poly<T, N>, const poly<U, M>>
+{
+    using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
+};
+
+template <typename T, std::size_t N, typename U>
+requires (!detail::is_poly_v<U>)
+struct std::common_type<const poly<T, N>, U>
+{
+    using type = poly<std::common_type_t<T, U>, N>;
+};
+
+template <typename T, std::size_t N, typename U>
+requires (!detail::is_poly_v<U>)
+struct std::common_type<U, const poly<T, N>>
+{
+    using type = poly<std::common_type_t<T, U>, N>;
+};
 
 template <typename T, typename U, std::size_t N>
 struct std::common_type<poly<T, N>, poly<U, N>>
@@ -430,12 +464,14 @@ constexpr auto operator*(const poly<T, N> &x, const poly<U, M> &y)
 {
     if constexpr (N == 0 || M == 0)
         return poly<std::common_type_t<T, U>, 0>{};
-    poly<std::common_type_t<T, U>, N + M - 1> res;
-    for (size_t i = 0; i < N; ++i)
-        for (size_t j = 0; j < M; ++j)
-            res[i + j] = res[i + j] + x[i] * y[j];
+    else {    
+        poly<std::common_type_t<T, U>, N + M - 1> res;
+        for (size_t i = 0; i < N; ++i)
+            for (size_t j = 0; j < M; ++j)
+                res[i + j] = res[i + j] + x[i] * y[j];
 
-    return res;
+        return res;
+    }
 }
 
 template <typename T_From, std::size_t N_From, typename T_To, std::size_t N_To>
