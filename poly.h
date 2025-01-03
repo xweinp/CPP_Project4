@@ -364,7 +364,6 @@ constexpr auto operator+(const U &y, const poly<T, N> &x)
 }
 // Oba argumenty to wielomiany
 template <typename T, size_t N, typename U, size_t M>
-    requires(std::is_convertible_v<U, T> || std::is_convertible_v<T, U>)
 constexpr auto operator+(const poly<T, N> &x, const poly<U, M> &y)
 {
     poly<std::common_type_t<T, U>, std::max(N, M)> res;
@@ -409,7 +408,6 @@ constexpr auto operator-(const U &y, const poly<T, N> &x)
 }
 // Oba argumenty to wielomiany
 template <typename T, size_t N, typename U, size_t M>
-    requires((std::is_convertible_v<U, T> || std::is_convertible_v<T, U>))
 constexpr auto operator-(const poly<T, N> &x, const poly<U, M> &y)
 {
     poly<std::common_type_t<T, U>, std::max(N, M)> res;
@@ -453,7 +451,7 @@ constexpr auto operator*(const U &y, const poly<T, N> &x)
 }
 // Oba argumenty to wielomiany
 template <typename T, size_t N, typename U, size_t M>
-    requires((std::is_convertible_v<U, T> || std::is_convertible_v<T, U>) && (N > 0 && M > 0))
+    requires(N > 0 && M > 0)
 constexpr auto operator*(const poly<T, N> &x, const poly<U, M> &y)
 {
     poly<decltype(x[0] * y[0]), N + M - 1> res;
@@ -464,7 +462,7 @@ constexpr auto operator*(const poly<T, N> &x, const poly<U, M> &y)
     return res;
 }
 template <typename T, size_t N, typename U, size_t M>
-    requires((std::is_convertible_v<U, T> || std::is_convertible_v<T, U>) && (N == 0 || M == 0))
+    requires(N == 0 || M == 0)
 constexpr auto operator*([[maybe_unused]] const poly<T, N> &x, [[maybe_unused]] const poly<U, M> &y)
 {
     return poly<std::common_type_t<T, U>, 0>{};

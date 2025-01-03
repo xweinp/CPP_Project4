@@ -1,0 +1,15 @@
+102(134) - źle działa konstruktor kopiujący
+201(134) - złe działanie operatorów lub konstruktorów z listą.
+203(134) - złe działanie operatorów lub konstruktorów z listą.
+204(don't compile) - z wersji operatorów +, - i * z wielomianem po obu stronach 
+                     usunąłem wymaganie std::is_convertible_v<U, T> || std::is_convertible_v<T, U>.
+                     Teraz wywala się jakiś assert.
+301(don't compile) - Ta sama poprawka co wyżej.
+                     Teraz wywala się jakiś assert. Możliwe, że źle działa metoda at.
+401(don't compile) - Ta sama poprawka co wyżej.
+                     Teraz kompiluje się i działa.
+503(don't compile) - Ta sama poprawka co wyżej.
+                     Teraz wywala się jakiś static_assert. Możliwe, że źle działa metoda at.
+504(don't compile) - Peczarski chyba coś pomylił, kompilacja i działanie na students jest poprawne
+505(134) - źle działa konstruktor kopiujący. w tym teście na końcu jest kurna powtórzone to samo co w 102.
+601(don't compile) - idk o co tu chodzi
