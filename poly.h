@@ -48,7 +48,7 @@ public:
 
     template <typename U, size_t M>
     constexpr poly(const poly<U, M> &other)
-        requires ((N >= M) && (std::convertible_to<U, T>))
+        requires(N >= M) && (std::convertible_to<U, T>)
     {
         for (size_t i = 0; i < M; i++)
         {
@@ -91,7 +91,7 @@ public:
 
     // OPERATORY PRZYPISANIA
     template <typename U, size_t M>
-        requires (std::is_convertible_v<poly<U, M>, poly<T, N>>)
+        requires(std::is_convertible_v<poly<U, M>, poly<T, N>>)
     constexpr auto operator=(const poly<U, M> &other) -> poly<T, N> &
     {
         if (!is_same_object(other))
