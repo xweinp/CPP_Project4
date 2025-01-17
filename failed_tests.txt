@@ -1,3 +1,5 @@
+Ilość dotychczasowych poprawek: 5
+
 + 102(134) - is_same_object sprawdzało czy obiekty są różne, a nie równe xD
              Teraz działa.
 + 201(134) - to co w 102. 
