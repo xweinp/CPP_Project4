@@ -54,6 +54,10 @@ public:
         {
             a[i] = other[i];
         }
+        for (size_t i = M; i < N; ++i)
+        {
+            a[i] = T(0);
+        }
     }
 
     template <typename U, size_t M>
@@ -236,6 +240,8 @@ private:
     {
         for (size_t i = 0; i < M; ++i)
             a[i] = static_cast<T>(other[i]);
+        for (size_t i = M; i < N; ++i)
+            a[i] = 0;
     }
 
     template <typename U, size_t M>
@@ -244,6 +250,8 @@ private:
     {
         for (size_t i = 0; i < M; ++i)
             a[i] = static_cast<T>(std::move(other[i]));
+        for (size_t i = M; i < N; ++i)
+            a[i] = 0;
     }
 
     // pomocnicze funkcje do at()
