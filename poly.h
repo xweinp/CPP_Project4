@@ -252,7 +252,9 @@ private:
         requires(!detail::is_poly_v<T>)
     constexpr auto calc_at(const U &first) const
     {
-        if constexpr (I == N - 1)
+        if constexpr (N == 0)
+            return T(0);
+        else if constexpr (I + 1 == N)
             return a[I];
         else
             return (first * calc_at<U, I + 1>(first)) + a[I];
@@ -262,11 +264,15 @@ private:
         requires(detail::is_poly_v<T>)
     constexpr auto calc_at(const U &first, Args &&...args) const
     {
-        auto son_res = a[I].at(std::forward<Args>(args)...);
-        if constexpr (I == N - 1)
-            return son_res;
-        else
-            return (first * calc_at<U, I + 1>(first, std::forward<Args>(args)...)) + son_res;
+        if constexpr (N == 0)
+            return T(0);
+        else {
+            auto son_res = a[I].at(std::forward<Args>(args)...);
+            if constexpr (I + 1 == N)
+                return son_res;
+            else 
+                return (first * calc_at<U, I + 1>(first, std::forward<Args>(args)...)) + son_res;
+        }
     }
 
     template <typename U>

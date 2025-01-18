@@ -17,7 +17,8 @@ Ilość dotychczasowych poprawek: 5
                        Teraz działa.
 + 503(don't compile) - Ta co w 204 i 102.
                        Teraz działa.
-? 504(don't compile) - Peczarski chyba coś pomylił, kompilacja i działanie na students jest poprawne
+? 504(don't compile) - W calc_at() trzeba sprawdzać czy N == 0. bruh. 
+                        Teraz działa.
 + 505(134) - To co w 120. 
              w tym teście na końcu jest kurna powtórzony test 102 xD.
              Teraz działa.
