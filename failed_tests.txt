@@ -1,4 +1,4 @@
-Ilość dotychczasowych poprawek: 5
+Ilość poprawek: 9
 
 + 102(134) - is_same_object sprawdzało czy obiekty są różne, a nie równe xD
              Teraz działa.
