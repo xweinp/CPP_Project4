@@ -54,10 +54,6 @@ public:
         {
             a[i] = other[i];
         }
-        for (size_t i = M; i < N; ++i)
-        {
-            a[i] = T(0);
-        }
     }
 
     template <typename U, size_t M>
