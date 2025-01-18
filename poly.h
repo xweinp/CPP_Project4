@@ -258,7 +258,7 @@ private:
     {
         if constexpr (N == 0)
             return T(0);
-        else if constexpr (I + 1 == N)
+        else if constexpr (I == N - 1)
             return a[I];
         else
             return (first * calc_at<U, I + 1>(first)) + a[I];
@@ -272,7 +272,7 @@ private:
             return T(0);
         else {
             auto son_res = a[I].at(std::forward<Args>(args)...);
-            if constexpr (I + 1 == N)
+            if constexpr (I == N - 1)
                 return son_res;
             else 
                 return (first * calc_at<U, I + 1>(first, std::forward<Args>(args)...)) + son_res;
