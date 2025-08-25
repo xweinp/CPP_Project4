@@ -1,4 +1,4 @@
-#include "poly.h"
+#include "../poly.h"
 #include <typeinfo>
 #include <iostream>
 
@@ -11,12 +11,12 @@ int main() {
     static_assert(detail::is_poly_v<double> == false);
     
     /*// Test detail::EitherPoly concept
-    //static_assert(detail::EitherPoly<poly<int, 3>, int>);
-    //static_assert(detail::EitherPoly<int, poly<int, 3>>);
-    //static_assert(detail::EitherPoly<poly<int, 3>, poly<double, 2>>);
-    //static_assert(detail::EitherPoly<poly<poly<int, 2>, 3>, poly<int, 4>>);
-    //static_assert(detail::EitherPoly<poly<poly<poly<int, 1>, 2>, 3>, int>);
-    //static_assert(!detail::EitherPoly<int, double>);
+    static_assert(detail::EitherPoly<poly<int, 3>, int>);
+    static_assert(detail::EitherPoly<int, poly<int, 3>>);
+    static_assert(detail::EitherPoly<poly<int, 3>, poly<double, 2>>);
+    static_assert(detail::EitherPoly<poly<poly<int, 2>, 3>, poly<int, 4>>);
+    static_assert(detail::EitherPoly<poly<poly<poly<int, 1>, 2>, 3>, int>);
+    static_assert(!detail::EitherPoly<int, double>);
 
     // Test detail::multiplication_result_type trait
     //static_assert(std::is_same_v<detail::multiplication_result_type_t<int, double>, double>);

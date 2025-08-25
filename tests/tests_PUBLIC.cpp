@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <typeinfo>
 
-#include "poly.h"
+#include "../poly.h"
 
 namespace RingWrappers {
 template <typename T>

@@ -1,4 +1,4 @@
-#include "poly.h"
+#include "../poly.h"
 
 template <typename T, std::size_t N>
 constexpr bool operator==(const poly<T, N> &a, const poly<T, N> &b) {
